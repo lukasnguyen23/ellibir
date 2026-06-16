@@ -1,7 +1,6 @@
 import { validateMeld, validateRun, validateSet } from './melds';
-import { canOpen } from './openingDetection';
 import { unmeldedPenalty } from './penalties';
-import { indicatorPenaltyMultiplier, isTronDiscard } from './tron';
+import { hasTronCardInHand, indicatorPenaltyMultiplier, isTronDiscard } from './tron';
 import type { Card, GameState, Meld, MeldType, Move, MoveResult, TronCard } from './types';
 
 let meldCounter = 0;
@@ -43,9 +42,9 @@ function advanceTurn(state: GameState): void {
 function applyMissedOpeningPenalties(state: GameState, openerId: string): void {
   for (const p of state.players) {
     if (p.id === openerId || p.hasOpened) continue;
-    if (canOpen(p.hand, state.settings, state.tron)) {
+    if (hasTronCardInHand(p.hand, state.tron)) {
       p.score -= 100;
-      state.log.push(`${p.name} hätte eröffnen können: -100`);
+      state.log.push(`${p.name} hatte die Tron-Karte und hat nicht zuerst eröffnet: -100`);
     }
   }
 }

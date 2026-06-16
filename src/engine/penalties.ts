@@ -1,6 +1,6 @@
 import { detectMeld } from './melds';
 import { cardPointValue } from './rules';
-import type { Card, GameSettings, TronCard } from './types';
+import type { Card, TronCard } from './types';
 
 interface MeldCombo {
   indices: number[];
@@ -72,13 +72,4 @@ export function unmeldedPenalty(
 ): number {
   if (hand.length === 0) return 0;
   return searchBestDeadwood(hand, aceValue, tron);
-}
-
-export function canOpen(
-  hand: Card[],
-  settings: GameSettings,
-  tron: TronCard,
-): boolean {
-  if (hand.length < 3) return false;
-  return findMeldCombos(hand, settings.aceValue, tron).length > 0;
 }

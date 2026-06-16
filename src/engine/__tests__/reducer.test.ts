@@ -83,22 +83,15 @@ describe('Eröffnung', () => {
     expect(res.ok).toBe(false);
   });
 
-  it('vergibt -100 wenn anderer eröffnen konnte', () => {
+  it('vergibt -100 wenn anderer eröffnet und man die Tron-Karte hielt', () => {
     const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
     const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
     const openerHand = [...set1, ...set2];
-    const couldOpenHand = [
-      card('hearts', 'K'),
-      card('spades', 'K'),
-      card('diamonds', 'K'),
-      card('hearts', '7'),
-      card('spades', '7'),
-      card('clubs', '7'),
-    ];
+    const tronHolderHand = [card('diamonds', '8'), card('clubs', '2'), card('clubs', '3')];
     const state = makeState(openerHand, {
       players: [
         { id: 'p1', name: 'A', hand: openerHand, hasOpened: false, score: 0 },
-        { id: 'p2', name: 'B', hand: couldOpenHand, hasOpened: false, score: 0 },
+        { id: 'p2', name: 'B', hand: tronHolderHand, hasOpened: false, score: 0 },
       ],
     });
     const res = applyMove(state, {
@@ -110,6 +103,35 @@ describe('Eröffnung', () => {
     });
     expect(res.ok).toBe(true);
     expect(res.state.players[1].score).toBe(-100);
+  });
+
+  it('vergibt keine -100 ohne Tron-Karte auf der Hand', () => {
+    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
+    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
+    const extra = card('clubs', '4');
+    const openerHand = [...set1, ...set2, extra];
+    const noTronHand = [
+      card('hearts', '5'),
+      card('spades', '5'),
+      card('clubs', '5'),
+      card('clubs', '2'),
+    ];
+    const state = makeState(openerHand, {
+      players: [
+        { id: 'p1', name: 'A', hand: openerHand, hasOpened: false, score: 0 },
+        { id: 'p2', name: 'B', hand: noTronHand, hasOpened: false, score: 0 },
+      ],
+    });
+    const res = applyMove(state, {
+      type: 'LAY_INITIAL_MELDS',
+      melds: [
+        { cardIds: set1.map((x) => x.id), type: 'set' },
+        { cardIds: set2.map((x) => x.id), type: 'set' },
+      ],
+    });
+    expect(res.ok).toBe(true);
+    expect(res.state.players[1].score).toBe(0);
+    expect(res.state.status).toBe('playing');
   });
 });
 

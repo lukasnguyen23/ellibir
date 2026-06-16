@@ -61,6 +61,80 @@ body {
   background: linear-gradient(160deg, #ffffff 0%, #f3f3ee 100%);
 }
 
+.card-joker {
+  background: linear-gradient(145deg, #faf0ff 0%, #e9d5ff 45%, #d8b4fe 100%);
+  border-color: #a855f7;
+}
+
+/* Tron-Karte: pulsierendes Leuchten */
+@keyframes tron-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px rgba(251, 191, 36, 0.75),
+      0 0 14px rgba(245, 215, 110, 0.55),
+      0 0 22px rgba(230, 180, 34, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 12px rgba(255, 220, 80, 1),
+      0 0 26px rgba(251, 191, 36, 0.85),
+      0 0 42px rgba(245, 215, 110, 0.55),
+      0 0 56px rgba(230, 180, 34, 0.3);
+  }
+}
+
+@keyframes tron-shimmer {
+  0% {
+    transform: translateX(-120%) rotate(18deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(120%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+.card-tron {
+  border: 2px solid #fcd34d !important;
+  animation: tron-glow 2.2s ease-in-out infinite;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.card-tron::after {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 55%;
+  height: 180%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 35%,
+    rgba(255, 248, 200, 0.75) 50%,
+    rgba(255, 255, 255, 0.15) 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: tron-shimmer 2.8s ease-in-out infinite;
+}
+
+.card-tron.card-tron--small {
+  animation-duration: 2.6s;
+}
+
+.card-tron.card-tron--small::after {
+  animation-duration: 3.2s;
+}
+
 .card-back {
   background:
     repeating-linear-gradient(45deg, #7f1d1d 0px, #7f1d1d 6px, #991b1b 6px, #991b1b 12px);

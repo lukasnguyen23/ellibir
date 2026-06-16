@@ -197,7 +197,7 @@ Beispiel: Anzeige 7? ? Tron = 8?
 
 ### Sonderstrafen
 
-- **-100 Punkte:** Ein anderer er?ffnet, du h?ttest aus deiner Hand ebenfalls er?ffnen k?nnen (mindestens ein g?ltiges Per), hast es aber nicht getan
+- **-100 Punkte:** Ein anderer er?ffnet, bevor du es tust, obwohl du die **Tron-Karte** auf der Hand hattest
 - **Tron-Sieg:** Gewinn durch Abwerfen der Tron-Karte (oder Joker) ? Gegner-Strafpunkte ?2 (stapelt mit Farb-Multiplikator)
 
 ---
@@ -245,7 +245,7 @@ Es gibt viele regionale Abweichungen bei Elli Bir (Startkarten, Joker-Regeln, Pu
 
 - 14 Startkarten
 - 2 Decks + 4 Joker
-- Eröffnung mit Auslage-Vorbereitung (mindestens ein Per)
+- Er?ffnung mit Auslage-Vorbereitung (mindestens ein Per)
 - Tron-Regeln mit Anzeigekarte und Farb-Multiplikator
 - Ass w?hlbar (1 oder 11)
 

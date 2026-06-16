@@ -70,3 +70,8 @@ export function indicatorPenaltyMultiplier(indicator: Card): number {
 export function isTronDiscard(card: Card, tron: TronCard): boolean {
   return card.isJoker || isTronCard(card, tron);
 }
+
+/** Hat der Spieler die echte Tron-Karte (nicht Joker) auf der Hand? */
+export function hasTronCardInHand(hand: Card[], tron: TronCard): boolean {
+  return hand.some((c) => isTronCard(c, tron));
+}

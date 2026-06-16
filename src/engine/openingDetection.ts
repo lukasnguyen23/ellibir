@@ -1,1 +1,1 @@
-export { canOpen, unmeldedPenalty } from './penalties';
+export { unmeldedPenalty } from './penalties';

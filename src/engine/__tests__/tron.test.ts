@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   RANK_SEQUENCE,
   computeTron,
+  hasTronCardInHand,
   indicatorPenaltyMultiplier,
   isTronCard,
   isTronWildcard,
@@ -67,5 +68,11 @@ describe('tron card helpers', () => {
   it('jokerFitsSlot nur exakter Tron', () => {
     expect(jokerFitsSlot(tron, { suit: 'hearts', rank: '8' })).toBe(true);
     expect(jokerFitsSlot(tron, { suit: 'clubs', rank: '8' })).toBe(false);
+  });
+
+  it('hasTronCardInHand erkennt echte Tron-Karte', () => {
+    expect(hasTronCardInHand([card('hearts', '8'), card('clubs', '2')], tron)).toBe(true);
+    expect(hasTronCardInHand([card('hearts', '7'), card('clubs', '2')], tron)).toBe(false);
+    expect(hasTronCardInHand([card('joker')], tron)).toBe(false);
   });
 });
