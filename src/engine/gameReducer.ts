@@ -1,6 +1,8 @@
 import { validateMeld, validateRun, validateSet } from './melds';
-import { handPenalty } from './rules';
-import type { Card, GameState, Meld, MeldType, Move, MoveResult } from './types';
+import { canOpen } from './openingDetection';
+import { unmeldedPenalty } from './penalties';
+import { indicatorPenaltyMultiplier, isTronDiscard } from './tron';
+import type { Card, GameState, Meld, MeldType, Move, MoveResult, TronCard } from './types';
 
 let meldCounter = 0;
 function nextMeldId(): string {
@@ -23,7 +25,7 @@ function pickCards(hand: Card[], ids: string[]): Card[] | null {
     const card = map.get(id);
     if (!card) return null;
     picked.push(card);
-    map.delete(id); // verhindert doppelte Verwendung derselben Karte
+    map.delete(id);
   }
   return picked;
 }
@@ -38,17 +40,47 @@ function advanceTurn(state: GameState): void {
   state.turnPhase = 'draw';
 }
 
-function finishIfEmpty(state: GameState): boolean {
+function applyMissedOpeningPenalties(state: GameState, openerId: string): void {
+  for (const p of state.players) {
+    if (p.id === openerId || p.hasOpened) continue;
+    if (canOpen(p.hand, state.settings, state.tron)) {
+      p.score -= 100;
+      state.log.push(`${p.name} hätte eröffnen können: -100`);
+    }
+  }
+}
+
+function applyLoserPenalties(
+  state: GameState,
+  winnerId: string,
+  wonByTronDiscard: boolean,
+): void {
+  const suitMult = indicatorPenaltyMultiplier(state.indicatorCard);
+  const tronMult = wonByTronDiscard ? 2 : 1;
+  const totalMult = suitMult * tronMult;
+
+  for (const p of state.players) {
+    if (p.id === winnerId) continue;
+    const deadwood = unmeldedPenalty(p.hand, state.settings.aceValue, state.tron);
+    const penalty = deadwood * totalMult;
+    p.score += penalty;
+    if (penalty > 0) {
+      state.log.push(
+        `${p.name}: ${deadwood} Restpunkte × ${totalMult}${wonByTronDiscard ? ' (Tron-Sieg)' : ''} = ${penalty}`,
+      );
+    }
+  }
+}
+
+function finishIfEmpty(state: GameState, discardedCard?: Card): boolean {
   const player = state.players[state.currentPlayerIndex];
   if (player.hand.length === 0) {
     state.status = 'finished';
     state.winnerId = player.id;
-    for (const p of state.players) {
-      if (p.id !== player.id) {
-        p.score += handPenalty(p.hand, state.settings.aceValue);
-      }
-    }
-    state.log.push(`${player.name} hat gewonnen!`);
+    const wonByTron =
+      discardedCard !== undefined && isTronDiscard(discardedCard, state.tron);
+    applyLoserPenalties(state, player.id, wonByTron);
+    state.log.push(`${player.name} hat gewonnen!${wonByTron ? ' (Tron-Abwurf)' : ''}`);
     return true;
   }
   return false;
@@ -61,12 +93,12 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
   const state = clone(prev);
   const player = state.players[state.currentPlayerIndex];
   const aceValue = state.settings.aceValue;
+  const tron = state.tron;
 
   switch (move.type) {
     case 'DRAW_STOCK': {
       if (state.turnPhase !== 'draw') return err(prev, 'Du hast bereits gezogen.');
       if (state.drawPile.length === 0) {
-        // Ablagestapel (außer oberster Karte) neu mischen.
         if (state.discardPile.length <= 1) return err(prev, 'Keine Karten mehr zum Ziehen.');
         const top = state.discardPile[state.discardPile.length - 1];
         const rest = state.discardPile.slice(0, -1);
@@ -105,7 +137,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
         }
         const cards = pickCards(player.hand, spec.cardIds);
         if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
-        const validation = validateMeld(cards, spec.type, aceValue);
+        const validation = validateMeld(cards, spec.type, aceValue, tron);
         if (!validation.valid) return err(prev, validation.error ?? 'Ungültiges Per.');
         totalPoints += validation.points;
         newMelds.push({
@@ -127,6 +159,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       player.hasOpened = true;
       state.melds.push(...newMelds);
       state.log.push(`${player.name} eröffnet mit ${totalPoints} Punkten.`);
+      applyMissedOpeningPenalties(state, player.id);
       finishIfEmpty(state);
       return { ok: true, state };
     }
@@ -138,7 +171,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       }
       const cards = pickCards(player.hand, move.cardIds);
       if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
-      const validation = validateMeld(cards, move.meldType, aceValue);
+      const validation = validateMeld(cards, move.meldType, aceValue, tron);
       if (!validation.valid) return err(prev, validation.error ?? 'Ungültiges Per.');
 
       player.hand = removeCards(player.hand, move.cardIds);
@@ -161,7 +194,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       const cards = pickCards(player.hand, move.cardIds);
       if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
 
-      const combined = tryCombineMeld(meld.type, meld.cards, cards, aceValue);
+      const combined = tryCombineMeld(meld.type, meld.cards, cards, aceValue, tron);
       if (!combined) return err(prev, 'Die Karten passen nicht an dieses Per.');
 
       meld.cards = combined;
@@ -175,10 +208,11 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
       const cards = pickCards(player.hand, [move.cardId]);
       if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
+      const discarded = cards[0];
       player.hand = removeCards(player.hand, [move.cardId]);
-      state.discardPile.push(cards[0]);
+      state.discardPile.push(discarded);
       state.log.push(`${player.name} wirft eine Karte ab.`);
-      if (!finishIfEmpty(state)) {
+      if (!finishIfEmpty(state, discarded)) {
         advanceTurn(state);
       }
       return { ok: true, state };
@@ -196,7 +230,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
           byId.delete(id);
         }
       }
-      reordered.push(...byId.values()); // übrige Karten anhängen
+      reordered.push(...byId.values());
       target.hand = reordered;
       return { ok: true, state };
     }
@@ -206,27 +240,24 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
   }
 }
 
-/** Versucht, neue Karten an ein bestehendes Per anzulegen (verschiedene Reihenfolgen). */
 function tryCombineMeld(
   type: MeldType,
   existing: Card[],
   added: Card[],
   aceValue: 1 | 11,
+  tron: TronCard,
 ): Card[] | null {
   if (type === 'set') {
-    const result = validateSet([...existing, ...added], aceValue);
+    const result = validateSet([...existing, ...added], aceValue, tron);
     return result.valid ? result.orderedCards : null;
   }
 
-  const sortedAdded = [...added];
   const candidates: Card[][] = [
     [...existing, ...added],
     [...added, ...existing],
-    [...existing, ...sortedAdded],
-    [...sortedAdded, ...existing],
   ];
   for (const candidate of candidates) {
-    const result = validateRun(candidate, aceValue);
+    const result = validateRun(candidate, aceValue, tron);
     if (result.valid) return result.orderedCards;
   }
   return null;

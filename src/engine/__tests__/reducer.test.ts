@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyMove } from '../gameReducer';
 import { DEFAULT_SETTINGS } from '../rules';
 import type { Card, GameState } from '../types';
-import { card } from './helpers';
+import { TEST_INDICATOR, TEST_TRON, card } from './helpers';
 
 function makeState(hand: Card[], overrides: Partial<GameState> = {}): GameState {
   return {
@@ -14,6 +14,8 @@ function makeState(hand: Card[], overrides: Partial<GameState> = {}): GameState 
     ],
     drawPile: [card('spades', '4'), card('spades', '5')],
     discardPile: [card('diamonds', '9')],
+    indicatorCard: TEST_INDICATOR,
+    tron: TEST_TRON,
     melds: [],
     currentPlayerIndex: 0,
     turnPhase: 'meld',
@@ -53,8 +55,8 @@ describe('51-Punkte-Eröffnung', () => {
   });
 
   it('akzeptiert eine Auslage mit genau/über 51', () => {
-    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')]; // 30
-    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')]; // 21
+    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
+    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
     const state = makeState([...set1, ...set2]);
     const res = applyMove(state, {
       type: 'LAY_INITIAL_MELDS',
@@ -79,6 +81,35 @@ describe('51-Punkte-Eröffnung', () => {
     });
     expect(res.ok).toBe(false);
   });
+
+  it('vergibt -100 wenn anderer eröffnen konnte', () => {
+    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
+    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
+    const openerHand = [...set1, ...set2];
+    const couldOpenHand = [
+      card('hearts', 'K'),
+      card('spades', 'K'),
+      card('diamonds', 'K'),
+      card('hearts', '7'),
+      card('spades', '7'),
+      card('clubs', '7'),
+    ];
+    const state = makeState(openerHand, {
+      players: [
+        { id: 'p1', name: 'A', hand: openerHand, hasOpened: false, score: 0 },
+        { id: 'p2', name: 'B', hand: couldOpenHand, hasOpened: false, score: 0 },
+      ],
+    });
+    const res = applyMove(state, {
+      type: 'LAY_INITIAL_MELDS',
+      melds: [
+        { cardIds: set1.map((x) => x.id), type: 'set' },
+        { cardIds: set2.map((x) => x.id), type: 'set' },
+      ],
+    });
+    expect(res.ok).toBe(true);
+    expect(res.state.players[1].score).toBe(-100);
+  });
 });
 
 describe('Abwerfen & Zugwechsel', () => {
@@ -95,7 +126,7 @@ describe('Abwerfen & Zugwechsel', () => {
 });
 
 describe('Siegbedingung', () => {
-  it('beendet das Spiel, wenn die Hand leer ist', () => {
+  it('beendet das Spiel mit Restkarten-Strafe', () => {
     const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
     const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
     const state = makeState([...set1, ...set2]);

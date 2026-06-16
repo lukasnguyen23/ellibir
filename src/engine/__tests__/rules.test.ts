@@ -19,6 +19,8 @@ describe('createGame', () => {
     });
     expect(game.turnPhase).toBe('meld');
     expect(game.log.some((line) => line.includes('beginnt mit 15 Karten'))).toBe(true);
+    expect(game.indicatorCard.isJoker).toBe(false);
+    expect(game.tron.suit).toBe(game.indicatorCard.suit);
   });
 
   it('wählt bei gleichem Seed denselben Startspieler', () => {

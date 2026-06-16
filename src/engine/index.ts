@@ -5,3 +5,6 @@ export * from './scoring';
 export * from './melds';
 export * from './rules';
 export * from './gameReducer';
+export * from './tron';
+export * from './penalties';
+export * from './openingDetection';

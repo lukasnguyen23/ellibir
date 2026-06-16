@@ -13,11 +13,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Card } from '@/engine/types';
+import type { Card, TronCard } from '@/engine/types';
 import { PlayingCard } from './PlayingCard';
 
 interface HandProps {
   cards: Card[];
+  tron: TronCard;
   selectedIds: string[];
   onToggle: (id: string) => void;
   onReorder: (orderedIds: string[]) => void;
@@ -25,10 +26,12 @@ interface HandProps {
 
 function SortableCard({
   card,
+  tron,
   selected,
   onToggle,
 }: {
   card: Card;
+  tron: TronCard;
   selected: boolean;
   onToggle: (id: string) => void;
 }) {
@@ -48,6 +51,7 @@ function SortableCard({
     >
       <PlayingCard
         card={card}
+        tron={tron}
         selected={selected}
         onClick={() => onToggle(card.id)}
         draggableProps={{ ...attributes, ...listeners }}
@@ -56,7 +60,7 @@ function SortableCard({
   );
 }
 
-export function Hand({ cards, selectedIds, onToggle, onReorder }: HandProps) {
+export function Hand({ cards, tron, selectedIds, onToggle, onReorder }: HandProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
@@ -77,6 +81,7 @@ export function Hand({ cards, selectedIds, onToggle, onReorder }: HandProps) {
             <SortableCard
               key={card.id}
               card={card}
+              tron={tron}
               selected={selectedIds.includes(card.id)}
               onToggle={onToggle}
             />

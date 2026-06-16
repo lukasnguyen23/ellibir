@@ -22,11 +22,15 @@ export function createFullDeck(jokerCount: number): Card[] {
   return cards;
 }
 
+function firstNonJokerIndex(deck: Card[], indices: number[]): number | undefined {
+  return indices.find((i) => !deck[i].isJoker);
+}
+
 export interface DealResult {
   hands: Card[][];
   drawPile: Card[];
   discardPile: Card[];
-  /** Zufällig gewählter Startspieler (erhält 15 statt 14 Karten). */
+  indicatorCard: Card;
   startingPlayerIndex: number;
 }
 
@@ -51,18 +55,27 @@ export function dealCards(
   const startingPlayerIndex = rng.int(numPlayers);
   hands[startingPlayerIndex].push(deck[index++]);
 
-  // Eine offene Karte als Start des Ablagestapels (kein Joker zum Start).
-  let discardStartIndex = index;
-  while (deck[discardStartIndex]?.isJoker && discardStartIndex < deck.length - 1) {
-    discardStartIndex++;
+  const poolIndices = Array.from({ length: deck.length - index }, (_, j) => index + j);
+
+  const indicatorIndex = firstNonJokerIndex(deck, poolIndices);
+  if (indicatorIndex === undefined) {
+    throw new Error('Keine Anzeigekarte verfügbar.');
   }
+
+  const discardPool = poolIndices.filter((i) => i !== indicatorIndex);
+  const discardStartIndex = firstNonJokerIndex(deck, discardPool) ?? discardPool[0];
+
+  const indicatorCard = deck[indicatorIndex];
   const discardCard = deck[discardStartIndex];
-  const rest = deck.filter((_, i) => i >= index && i !== discardStartIndex);
+  const drawPile = deck.filter(
+    (_, i) => i >= index && i !== indicatorIndex && i !== discardStartIndex,
+  );
 
   return {
     hands,
-    drawPile: rest,
+    drawPile,
     discardPile: [discardCard],
+    indicatorCard,
     startingPlayerIndex,
   };
 }

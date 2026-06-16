@@ -18,23 +18,22 @@ describe('Deck', () => {
     const a = dealCards(4, 14, 4, 12345);
     const b = dealCards(4, 14, 4, 12345);
     expect(a.hands[0].map((c) => c.id)).toEqual(b.hands[0].map((c) => c.id));
+    expect(a.indicatorCard.id).toBe(b.indicatorCard.id);
   });
 
-  it('gibt einem Startspieler 15 und den anderen 14 Karten', () => {
-    for (const numPlayers of [2, 3, 4]) {
-      const { hands, drawPile, discardPile, startingPlayerIndex } = dealCards(
-        numPlayers,
-        14,
-        4,
-        999 + numPlayers,
-      );
-      expect(hands).toHaveLength(numPlayers);
-      hands.forEach((h, i) => {
-        expect(h).toHaveLength(i === startingPlayerIndex ? 15 : 14);
-      });
-      expect(discardPile).toHaveLength(1);
-      expect(discardPile[0].isJoker).toBe(false);
-      expect(hands.flat().length + drawPile.length + discardPile.length).toBe(2 * 52 + 4);
-    }
+  it('gibt jedem Spieler die richtige Kartenzahl', () => {
+    const { hands, drawPile, discardPile, indicatorCard } = dealCards(4, 14, 4, 999);
+    expect(hands).toHaveLength(4);
+    const totalHand = hands.reduce((s, h) => s + h.length, 0);
+    expect(totalHand).toBe(14 * 4 + 1);
+    expect(discardPile).toHaveLength(1);
+    expect(discardPile[0].isJoker).toBe(false);
+    expect(indicatorCard.isJoker).toBe(false);
+    expect(hands.flat().length + drawPile.length + discardPile.length + 1).toBe(2 * 52 + 4);
+  });
+
+  it('legt Anzeigekarte separat vom Nachziehstapel', () => {
+    const { drawPile, indicatorCard } = dealCards(2, 14, 4, 42);
+    expect(drawPile.some((c) => c.id === indicatorCard.id)).toBe(false);
   });
 });

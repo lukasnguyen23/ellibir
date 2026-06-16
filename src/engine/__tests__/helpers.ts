@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit } from '../types';
+import type { Card, Rank, Suit, TronCard } from '../types';
 
 let n = 0;
 
@@ -10,3 +10,6 @@ export function card(suit: Suit | 'joker', rank?: Rank): Card {
   }
   return { id: `${suit}-${rank}-${n}`, suit, rank: rank!, isJoker: false };
 }
+
+export const TEST_INDICATOR = card('diamonds', '7');
+export const TEST_TRON: TronCard = { suit: 'diamonds', rank: '8' };

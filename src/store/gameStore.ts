@@ -88,7 +88,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       get().showToast('Ein Per braucht mindestens 3 Karten.', 'error');
       return;
     }
-    const validation = detectMeld(cards, game.settings.aceValue);
+    const validation = detectMeld(cards, game.settings.aceValue, game.tron);
     if (!validation) {
       get().showToast('Diese Karten bilden kein gültiges Per.', 'error');
       return;
@@ -137,7 +137,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const cards = selectedCardIds
       .map((id) => player.hand.find((c) => c.id === id))
       .filter((c): c is Card => Boolean(c));
-    const validation = detectMeld(cards, game.settings.aceValue);
+    const validation = detectMeld(cards, game.settings.aceValue, game.tron);
     if (!validation) {
       get().showToast('Diese Karten bilden kein gültiges Per.', 'error');
       return;
@@ -197,9 +197,9 @@ export function selectionValidation(game: GameState, selectedIds: string[]) {
     .map((id) => player.hand.find((c) => c.id === id))
     .filter((c): c is Card => Boolean(c));
   if (cards.length < 3) return null;
-  const set = validateMeld(cards, 'set', game.settings.aceValue);
+  const set = validateMeld(cards, 'set', game.settings.aceValue, game.tron);
   if (set.valid) return set;
-  const run = validateMeld(cards, 'run', game.settings.aceValue);
+  const run = validateMeld(cards, 'run', game.settings.aceValue, game.tron);
   if (run.valid) return run;
   return null;
 }

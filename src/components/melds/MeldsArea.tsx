@@ -1,16 +1,17 @@
 import { motion } from 'framer-motion';
-import type { Meld } from '@/engine/types';
+import type { Meld, TronCard } from '@/engine/types';
 import type { TrayGroup } from '@/store/gameStore';
 import { PlayingCard } from '@/components/cards/PlayingCard';
 
 interface Props {
   melds: Meld[];
+  tron: TronCard;
   playerNames: Record<string, string>;
   canAppend: boolean;
   onMeldClick: (meldId: string) => void;
 }
 
-export function MeldsArea({ melds, playerNames, canAppend, onMeldClick }: Props) {
+export function MeldsArea({ melds, tron, playerNames, canAppend, onMeldClick }: Props) {
   if (melds.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-white/40 text-sm italic">
@@ -36,7 +37,7 @@ export function MeldsArea({ melds, playerNames, canAppend, onMeldClick }: Props)
           <div className="flex">
             {meld.cards.map((card, i) => (
               <div key={card.id} className={i === 0 ? '' : '-ml-4'}>
-                <PlayingCard card={card} small />
+                <PlayingCard card={card} tron={tron} small />
               </div>
             ))}
           </div>
@@ -51,10 +52,12 @@ export function MeldsArea({ melds, playerNames, canAppend, onMeldClick }: Props)
 
 export function TrayArea({
   groups,
+  tron,
   threshold,
   onRemove,
 }: {
   groups: TrayGroup[];
+  tron: TronCard;
   threshold: number;
   onRemove: (id: string) => void;
 }) {
@@ -86,7 +89,7 @@ export function TrayArea({
               <div className="flex">
                 {g.cards.map((card, i) => (
                   <div key={card.id} className={i === 0 ? '' : '-ml-4'}>
-                    <PlayingCard card={card} small />
+                    <PlayingCard card={card} tron={tron} small />
                   </div>
                 ))}
               </div>

@@ -25,6 +25,11 @@ export const RANKS: Rank[] = [
 
 export const RED_SUITS: Suit[] = ['hearts', 'diamonds'];
 
+export interface TronCard {
+  suit: Suit;
+  rank: Rank;
+}
+
 export interface Card {
   /** Eindeutige Instanz-ID (auch bei doppelten Karten in 2 Decks einzigartig). */
   id: string;
@@ -75,6 +80,8 @@ export interface GameState {
   drawPile: Card[];
   discardPile: Card[];
   melds: Meld[];
+  indicatorCard: Card;
+  tron: TronCard;
   currentPlayerIndex: number;
   turnPhase: TurnPhase;
   status: GameStatus;

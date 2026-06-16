@@ -1,16 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import type { Card } from '@/engine/types';
+import type { Card, TronCard } from '@/engine/types';
 import { PlayingCard } from '@/components/cards/PlayingCard';
 
 interface Props {
   drawCount: number;
   discardTop: Card | null;
+  tron: TronCard;
   canDraw: boolean;
   onDrawStock: () => void;
   onDrawDiscard: () => void;
 }
 
-export function Piles({ drawCount, discardTop, canDraw, onDrawStock, onDrawDiscard }: Props) {
+export function Piles({ drawCount, discardTop, tron, canDraw, onDrawStock, onDrawDiscard }: Props) {
   return (
     <div className="flex items-center gap-8">
       <div className="flex flex-col items-center gap-1">
@@ -56,7 +57,7 @@ export function Piles({ drawCount, discardTop, canDraw, onDrawStock, onDrawDisca
                 transition={{ type: 'spring', stiffness: 320, damping: 24 }}
                 className="absolute inset-0"
               >
-                <PlayingCard card={discardTop} />
+                <PlayingCard card={discardTop} tron={tron} />
               </motion.div>
             ) : (
               <div className="absolute inset-0 rounded-lg border-2 border-dashed border-white/25" />
