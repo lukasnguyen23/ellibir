@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-felt-900: #0b3d2e;
+  --color-felt-800: #0f5132;
+  --color-felt-700: #14663f;
+  --color-felt-600: #1b7a4c;
+  --color-gold-400: #f5d76e;
+  --color-gold-500: #e6b422;
+  --color-gold-600: #c8961a;
+  --color-card-red: #d11b2e;
+  --color-card-black: #1a1a1a;
+
+  --font-display: 'Georgia', 'Times New Roman', serif;
+
+  --shadow-card: 0 6px 14px -4px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover: 0 18px 34px -8px rgba(0, 0, 0, 0.65);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Spieltisch-Hintergrund: radialer Filzeffekt */
+.table-felt {
+  background:
+    radial-gradient(
+      ellipse at center,
+      var(--color-felt-600) 0%,
+      var(--color-felt-800) 55%,
+      var(--color-felt-900) 100%
+    );
+  background-color: var(--color-felt-800);
+}
+
+/* Subtile Filz-Textur */
+.table-felt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.5;
+}
+
+.card-face {
+  background: linear-gradient(160deg, #ffffff 0%, #f3f3ee 100%);
+}
+
+.card-back {
+  background:
+    repeating-linear-gradient(45deg, #7f1d1d 0px, #7f1d1d 6px, #991b1b 6px, #991b1b 12px);
+  border: 2px solid #fbbf24;
+}
+
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
