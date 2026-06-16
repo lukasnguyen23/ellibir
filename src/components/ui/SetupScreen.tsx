@@ -86,7 +86,7 @@ export function SetupScreen({ onStart }: Props) {
           Spiel starten
         </button>
         <p className="text-center text-white/40 text-xs mt-3">
-          14 Karten · 2 Decks + 4 Joker · Hotseat (Gerät weitergeben)
+          14 Karten · ein zufälliger Spieler beginnt mit 15 · 2 Decks + 4 Joker · Hotseat
         </p>
       </motion.div>
     </div>

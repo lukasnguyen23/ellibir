@@ -24,8 +24,15 @@ export function GameTable() {
   const opponents = game.players.filter((_, i) => i !== game.currentPlayerIndex);
   const playerNames = Object.fromEntries(game.players.map((p) => [p.id, p.name]));
 
-  const [handoffFor, setHandoffFor] = useState<string | null>(null);
+  const [handoffFor, setHandoffFor] = useState<string | null>(
+    () => game.players[game.currentPlayerIndex].id,
+  );
   const [shownIndex, setShownIndex] = useState(game.currentPlayerIndex);
+
+  useEffect(() => {
+    setHandoffFor(game.players[game.currentPlayerIndex].id);
+    setShownIndex(game.currentPlayerIndex);
+  }, [game.id]);
 
   useEffect(() => {
     if (game.currentPlayerIndex !== shownIndex && game.status === 'playing') {
@@ -104,6 +111,9 @@ export function GameTable() {
             <h2 className="font-display text-5xl text-gold-400">
               {game.players.find((p) => p.id === handoffFor)?.name}
             </h2>
+            {handoffFor === player.id && player.hand.length === 15 && game.turnPhase === 'meld' && (
+              <p className="text-white/70 text-sm">Du beginnst mit 15 Karten – lege eine ab.</p>
+            )}
             <button
               type="button"
               onClick={() => setHandoffFor(null)}

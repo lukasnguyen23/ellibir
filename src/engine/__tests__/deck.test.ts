@@ -20,12 +20,21 @@ describe('Deck', () => {
     expect(a.hands[0].map((c) => c.id)).toEqual(b.hands[0].map((c) => c.id));
   });
 
-  it('gibt jedem Spieler die richtige Kartenzahl', () => {
-    const { hands, drawPile, discardPile } = dealCards(4, 14, 4, 999);
-    expect(hands).toHaveLength(4);
-    hands.forEach((h) => expect(h).toHaveLength(14));
-    expect(discardPile).toHaveLength(1);
-    expect(discardPile[0].isJoker).toBe(false);
-    expect(hands.flat().length + drawPile.length + discardPile.length).toBe(2 * 52 + 4);
+  it('gibt einem Startspieler 15 und den anderen 14 Karten', () => {
+    for (const numPlayers of [2, 3, 4]) {
+      const { hands, drawPile, discardPile, startingPlayerIndex } = dealCards(
+        numPlayers,
+        14,
+        4,
+        999 + numPlayers,
+      );
+      expect(hands).toHaveLength(numPlayers);
+      hands.forEach((h, i) => {
+        expect(h).toHaveLength(i === startingPlayerIndex ? 15 : 14);
+      });
+      expect(discardPile).toHaveLength(1);
+      expect(discardPile[0].isJoker).toBe(false);
+      expect(hands.flat().length + drawPile.length + discardPile.length).toBe(2 * 52 + 4);
+    }
   });
 });

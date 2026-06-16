@@ -26,6 +26,8 @@ export interface DealResult {
   hands: Card[][];
   drawPile: Card[];
   discardPile: Card[];
+  /** Zufällig gewählter Startspieler (erhält 15 statt 14 Karten). */
+  startingPlayerIndex: number;
 }
 
 /** Mischt und verteilt Karten an die Spieler, legt Nachzieh- und Ablagestapel an. */
@@ -46,6 +48,9 @@ export function dealCards(
     }
   }
 
+  const startingPlayerIndex = rng.int(numPlayers);
+  hands[startingPlayerIndex].push(deck[index++]);
+
   // Eine offene Karte als Start des Ablagestapels (kein Joker zum Start).
   let discardStartIndex = index;
   while (deck[discardStartIndex]?.isJoker && discardStartIndex < deck.length - 1) {
@@ -58,5 +63,6 @@ export function dealCards(
     hands,
     drawPile: rest,
     discardPile: [discardCard],
+    startingPlayerIndex,
   };
 }

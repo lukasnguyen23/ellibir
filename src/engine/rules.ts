@@ -23,7 +23,7 @@ export function createGame(options: CreateGameOptions): GameState {
   const settings: GameSettings = { ...DEFAULT_SETTINGS, ...options.settings };
   const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
 
-  const { hands, drawPile, discardPile } = dealCards(
+  const { hands, drawPile, discardPile, startingPlayerIndex } = dealCards(
     options.players.length,
     settings.startingCards,
     settings.jokerCount,
@@ -38,6 +38,8 @@ export function createGame(options: CreateGameOptions): GameState {
     score: 0,
   }));
 
+  const starter = players[startingPlayerIndex];
+
   return {
     id: options.id ?? `game-${seed}`,
     settings,
@@ -45,11 +47,14 @@ export function createGame(options: CreateGameOptions): GameState {
     drawPile,
     discardPile,
     melds: [],
-    currentPlayerIndex: 0,
-    turnPhase: 'draw',
+    currentPlayerIndex: startingPlayerIndex,
+    turnPhase: 'meld',
     status: 'playing',
     winnerId: null,
-    log: [`Spiel gestartet mit ${players.length} Spielern.`],
+    log: [
+      `Spiel gestartet mit ${players.length} Spielern.`,
+      `${starter.name} beginnt mit 15 Karten.`,
+    ],
   };
 }
 
