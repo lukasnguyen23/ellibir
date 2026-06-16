@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { Hand } from '@/components/cards/Hand';
 import { Opponents } from './Opponents';
-import { Piles } from './Piles';
+import { DrawPile, DiscardPile } from './Piles';
 import { MeldsArea, TrayArea } from '@/components/melds/MeldsArea';
 import { IndicatorCard } from './IndicatorCard';
 import { ActionBar } from '@/components/ui/ActionBar';
@@ -57,17 +57,24 @@ export function GameTable() {
       </div>
 
       <div className="relative z-10 flex-1 flex items-stretch gap-4 px-6 py-3 min-h-0">
-        <div className="flex items-center">
-          <Piles
+        <div className="flex items-center shrink-0">
+          <DrawPile
             drawCount={game.drawPile.length}
-            discardTop={game.discardPile.at(-1) ?? null}
-            tron={game.tron}
             canDraw={game.turnPhase === 'draw'}
             onDrawStock={() => dispatch({ type: 'DRAW_STOCK' })}
-            onDrawDiscard={() => dispatch({ type: 'DRAW_DISCARD' })}
           />
         </div>
-        <div className="flex-1 rounded-2xl bg-black/15 border border-white/5 flex min-h-0">
+
+        <div className="flex-1 relative rounded-2xl bg-black/15 border border-white/5 min-h-0 overflow-hidden">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+            <DiscardPile
+              discardTop={game.discardPile.at(-1) ?? null}
+              tron={game.tron}
+              canDraw={game.turnPhase === 'draw'}
+              onDrawDiscard={() => dispatch({ type: 'DRAW_DISCARD' })}
+              centered
+            />
+          </div>
           <MeldsArea
             melds={game.melds}
             tron={game.tron}

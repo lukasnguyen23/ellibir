@@ -13,15 +13,12 @@ interface Props {
 
 export function MeldsArea({ melds, tron, playerNames, canAppend, onMeldClick }: Props) {
   if (melds.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-white/40 text-sm italic">
-        Noch keine Kombinationen ausgelegt
-      </div>
-    );
+    return <div className="w-full h-full pointer-events-none" aria-hidden />;
   }
 
   return (
-    <div className="flex-1 flex flex-wrap content-start gap-3 p-3 overflow-auto">
+    <div className="w-full h-full overflow-auto">
+      <div className="flex flex-wrap justify-center content-start gap-3 p-3 min-h-full px-[clamp(5rem,22vw,9rem)] py-[clamp(4.5rem,14vh,6.5rem)]">
       {melds.map((meld) => (
         <motion.button
           key={meld.id}
@@ -46,6 +43,7 @@ export function MeldsArea({ melds, tron, playerNames, canAppend, onMeldClick }: 
           </div>
         </motion.button>
       ))}
+      </div>
     </div>
   );
 }
