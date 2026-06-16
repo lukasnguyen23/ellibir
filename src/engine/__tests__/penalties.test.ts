@@ -24,7 +24,7 @@ describe('unmeldedPenalty', () => {
 });
 
 describe('canOpen', () => {
-  it('erkennt Eröffnung ≥51', () => {
+  it('erkennt Eröffnung mit gültigem Per', () => {
     const hand = [
       card('hearts', 'K'),
       card('spades', 'K'),
@@ -36,8 +36,13 @@ describe('canOpen', () => {
     expect(canOpen(hand, DEFAULT_SETTINGS, TRON)).toBe(true);
   });
 
-  it('lehnt zu wenige Punkte ab', () => {
+  it('erkennt Eröffnung auch mit kleinem Per', () => {
     const hand = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
+    expect(canOpen(hand, DEFAULT_SETTINGS, TRON)).toBe(true);
+  });
+
+  it('lehnt ab wenn kein Per möglich', () => {
+    const hand = [card('hearts', '5'), card('spades', '3'), card('clubs', 'K')];
     expect(canOpen(hand, DEFAULT_SETTINGS, TRON)).toBe(false);
   });
 });

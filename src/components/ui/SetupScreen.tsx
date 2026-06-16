@@ -31,7 +31,7 @@ export function SetupScreen({ onStart }: Props) {
         className="relative z-10 w-full max-w-md rounded-2xl bg-black/40 backdrop-blur-md border border-gold-400/30 p-7 shadow-2xl"
       >
         <h1 className="font-display text-4xl text-gold-400 text-center tracking-wide">Elli Bir</h1>
-        <p className="text-center text-white/60 text-sm mb-6">Das 51-Punkte-Kartenspiel</p>
+        <p className="text-center text-white/60 text-sm mb-6">Das Kartenspiel für 2–4 Spieler</p>
 
         <label className="block text-sm text-white/80 mb-2">Anzahl Spieler</label>
         <div className="flex gap-2 mb-5">

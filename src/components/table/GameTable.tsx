@@ -83,7 +83,6 @@ export function GameTable() {
           <TrayArea
             groups={trayGroups}
             tron={game.tron}
-            threshold={game.settings.openingThreshold}
             onRemove={removeTrayGroup}
           />
         )}

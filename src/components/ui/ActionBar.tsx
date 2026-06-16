@@ -46,7 +46,7 @@ export function ActionBar({ game }: { game: GameState }) {
   const phase = game.turnPhase;
   const validation = selectionValidation(game, selectedCardIds);
   const trayTotal = trayGroups.reduce((sum, g) => sum + g.points, 0);
-  const canOpen = trayTotal >= game.settings.openingThreshold;
+  const canCommitOpening = trayGroups.length > 0;
 
   return (
     <div className="flex items-center gap-2 flex-wrap justify-center">
@@ -61,8 +61,8 @@ export function ActionBar({ game }: { game: GameState }) {
           <Btn onClick={addSelectionToTray} disabled={!validation} variant="default">
             Per zur Auslage {validation ? `(+${validation.points})` : ''}
           </Btn>
-          <Btn onClick={commitOpening} disabled={!canOpen} variant="primary">
-            Eröffnen ({trayTotal}/{game.settings.openingThreshold})
+          <Btn onClick={commitOpening} disabled={!canCommitOpening} variant="primary">
+            Eröffnen{trayTotal > 0 ? ` (${trayTotal} Pkt.)` : ''}
           </Btn>
           {trayGroups.length > 0 && (
             <Btn onClick={clearTray} variant="default">

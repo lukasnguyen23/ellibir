@@ -115,12 +115,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   commitOpening: () => {
     const { game, trayGroups, dispatch } = get();
     if (!game) return;
-    const total = trayGroups.reduce((sum, g) => sum + g.points, 0);
-    if (total < game.settings.openingThreshold) {
-      get().showToast(
-        `Die Auslage hat erst ${total} Punkte (mindestens ${game.settings.openingThreshold} nötig).`,
-        'error',
-      );
+    if (trayGroups.length === 0) {
+      get().showToast('Mindestens ein Per zur Auslage hinzufügen.', 'error');
       return;
     }
     const ok = dispatch({

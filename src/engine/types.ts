@@ -59,15 +59,13 @@ export interface GameSettings {
   jokerCount: number;
   /** Startkarten pro Spieler. */
   startingCards: number;
-  /** Mindestpunkte für die erste Auslage ("Elli Bir" = 51). */
-  openingThreshold: number;
 }
 
 export interface PlayerState {
   id: string;
   name: string;
   hand: Card[];
-  /** Hat der Spieler die 51-Punkte-Eröffnung bereits geschafft? */
+  /** Hat der Spieler bereits eröffnet (erste Auslage aufgedeckt)? */
   hasOpened: boolean;
   /** Strafpunkte / Score über mehrere Runden. */
   score: number;
@@ -92,7 +90,7 @@ export interface GameState {
 export type Move =
   | { type: 'DRAW_STOCK' }
   | { type: 'DRAW_DISCARD' }
-  /** Erste Auslage: mehrere Pers gleichzeitig, müssen zusammen >= 51 ergeben. */
+  /** Erste Auslage: mehrere Pers gleichzeitig beim Aufdecken. */
   | { type: 'LAY_INITIAL_MELDS'; melds: { cardIds: string[]; type: MeldType }[] }
   /** Weitere Auslage nach erfolgter Eröffnung. */
   | { type: 'LAY_MELD'; cardIds: string[]; meldType: MeldType }

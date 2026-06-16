@@ -53,28 +53,27 @@ export function MeldsArea({ melds, tron, playerNames, canAppend, onMeldClick }: 
 export function TrayArea({
   groups,
   tron,
-  threshold,
   onRemove,
 }: {
   groups: TrayGroup[];
   tron: TronCard;
-  threshold: number;
   onRemove: (id: string) => void;
 }) {
   const total = groups.reduce((sum, g) => sum + g.points, 0);
-  const reached = total >= threshold;
+  const ready = groups.length > 0;
 
   return (
     <div className="rounded-xl border border-gold-400/40 bg-black/30 p-2">
       <div className="flex items-center justify-between mb-1 px-1">
         <span className="text-xs text-white/70">Auslage-Vorbereitung</span>
-        <span className={`text-xs font-bold ${reached ? 'text-emerald-400' : 'text-gold-400'}`}>
-          {total} / {threshold} Punkte
+        <span className={`text-xs font-bold ${ready ? 'text-emerald-400' : 'text-gold-400'}`}>
+          {groups.length} Per{groups.length === 1 ? '' : 's'}
+          {total > 0 ? ` · ${total} Pkt.` : ''}
         </span>
       </div>
       {groups.length === 0 ? (
         <div className="text-[11px] text-white/40 px-1 py-2">
-          Wähle Karten und füge ein Per hinzu, bis du {threshold} Punkte erreichst.
+          Füge mindestens ein Per hinzu, dann aufdecken.
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">

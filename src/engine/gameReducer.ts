@@ -125,10 +125,10 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
     case 'LAY_INITIAL_MELDS': {
       if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
       if (player.hasOpened) return err(prev, 'Du hast bereits eröffnet.');
+      if (move.melds.length === 0) return err(prev, 'Mindestens ein Per zur Eröffnung nötig.');
 
       const usedIds = new Set<string>();
       const newMelds: Meld[] = [];
-      let totalPoints = 0;
 
       for (const spec of move.melds) {
         for (const id of spec.cardIds) {
@@ -139,7 +139,6 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
         if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
         const validation = validateMeld(cards, spec.type, aceValue, tron);
         if (!validation.valid) return err(prev, validation.error ?? 'Ungültiges Per.');
-        totalPoints += validation.points;
         newMelds.push({
           id: nextMeldId(),
           type: spec.type,
@@ -148,17 +147,12 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
         });
       }
 
-      if (totalPoints < state.settings.openingThreshold) {
-        return err(
-          prev,
-          `Die erste Auslage muss mindestens ${state.settings.openingThreshold} Punkte ergeben (aktuell ${totalPoints}).`,
-        );
-      }
-
       player.hand = removeCards(player.hand, [...usedIds]);
       player.hasOpened = true;
       state.melds.push(...newMelds);
-      state.log.push(`${player.name} eröffnet mit ${totalPoints} Punkten.`);
+      state.log.push(
+        `${player.name} eröffnet mit ${newMelds.length} Per${newMelds.length === 1 ? '' : 's'}.`,
+      );
       applyMissedOpeningPenalties(state, player.id);
       finishIfEmpty(state);
       return { ok: true, state };
@@ -167,7 +161,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
     case 'LAY_MELD': {
       if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
       if (!player.hasOpened) {
-        return err(prev, 'Du musst zuerst mit mindestens 51 Punkten eröffnen.');
+        return err(prev, 'Du musst zuerst eröffnen.');
       }
       const cards = pickCards(player.hand, move.cardIds);
       if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');

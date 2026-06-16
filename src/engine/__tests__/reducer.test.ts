@@ -42,19 +42,20 @@ describe('Ziehen', () => {
   });
 });
 
-describe('51-Punkte-Eröffnung', () => {
-  it('lehnt eine Auslage unter 51 ab', () => {
+describe('Eröffnung', () => {
+  it('akzeptiert Eröffnung mit einem kleinen Per', () => {
     const c = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
     const state = makeState([...c]);
     const res = applyMove(state, {
       type: 'LAY_INITIAL_MELDS',
       melds: [{ cardIds: c.map((x) => x.id), type: 'set' }],
     });
-    expect(res.ok).toBe(false);
-    expect(res.state.players[0].hasOpened).toBe(false);
+    expect(res.ok).toBe(true);
+    expect(res.state.players[0].hasOpened).toBe(true);
+    expect(res.state.melds).toHaveLength(1);
   });
 
-  it('akzeptiert eine Auslage mit genau/über 51', () => {
+  it('akzeptiert Eröffnung mit mehreren Pers', () => {
     const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
     const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
     const state = makeState([...set1, ...set2]);

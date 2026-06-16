@@ -9,7 +9,6 @@ export const DEFAULT_SETTINGS: GameSettings = {
   aceValue: 11,
   jokerCount: 4,
   startingCards: 14,
-  openingThreshold: 51,
 };
 
 export interface CreateGameOptions {

@@ -40,42 +40,29 @@ function findMeldCombos(hand: Card[], aceValue: 1 | 11, tron: TronCard): MeldCom
   return combos;
 }
 
-function searchBestPartition(
-  hand: Card[],
-  aceValue: 1 | 11,
-  tron: TronCard,
-  mode: 'deadwood' | 'opening',
-  threshold: number,
-): { deadwood: number; meldPoints: number; canOpen: boolean } {
+function searchBestDeadwood(hand: Card[], aceValue: 1 | 11, tron: TronCard): number {
   const combos = findMeldCombos(hand, aceValue, tron);
   let bestDeadwood = hand.reduce((s, c) => s + cardPointValue(c, aceValue, tron), 0);
-  let bestMeldPoints = 0;
-  let canOpen = false;
 
-  function dfs(used: Set<number>, meldPoints: number) {
-    if (mode === 'opening' && meldPoints >= threshold) {
-      canOpen = true;
-    }
-
+  function dfs(used: Set<number>) {
     const deadwood = hand.reduce(
       (s, c, i) => (used.has(i) ? s : s + cardPointValue(c, aceValue, tron)),
       0,
     );
     if (deadwood < bestDeadwood) {
       bestDeadwood = deadwood;
-      bestMeldPoints = meldPoints;
     }
 
     for (const combo of combos) {
       if (combo.indices.some((i) => used.has(i))) continue;
       const next = new Set(used);
       combo.indices.forEach((i) => next.add(i));
-      dfs(next, meldPoints + combo.points);
+      dfs(next);
     }
   }
 
-  dfs(new Set(), 0);
-  return { deadwood: bestDeadwood, meldPoints: bestMeldPoints, canOpen };
+  dfs(new Set());
+  return bestDeadwood;
 }
 
 export function unmeldedPenalty(
@@ -84,7 +71,7 @@ export function unmeldedPenalty(
   tron: TronCard,
 ): number {
   if (hand.length === 0) return 0;
-  return searchBestPartition(hand, aceValue, tron, 'deadwood', 0).deadwood;
+  return searchBestDeadwood(hand, aceValue, tron);
 }
 
 export function canOpen(
@@ -93,11 +80,5 @@ export function canOpen(
   tron: TronCard,
 ): boolean {
   if (hand.length < 3) return false;
-  return searchBestPartition(
-    hand,
-    settings.aceValue,
-    tron,
-    'opening',
-    settings.openingThreshold,
-  ).canOpen;
+  return findMeldCombos(hand, settings.aceValue, tron).length > 0;
 }

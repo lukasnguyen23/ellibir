@@ -1,6 +1,6 @@
-# Elli Bir (51)
+# Elli Bir
 
-**Elli Bir** ist ein Kartenspiel f?r 2 bis 4 Spieler. Ziel ist es, als Erster alle Karten loszuwerden, indem du Kombinationen (?**Per**?) bildest und auslegst. Der Name kommt von der **51-Punkte-Regel**: Bevor du zum ersten Mal auslegen darfst, m?ssen deine Kombinationen zusammen mindestens 51 Punkte wert sein.
+**Elli Bir** ist ein Kartenspiel f?r 2 bis 4 Spieler. Ziel ist es, als Erster alle Karten loszuwerden, indem du Kombinationen (**Per**) bildest und auslegst.
 
 Dieses Repository enth?lt eine digitale Version als **React-Webapp** (aktuell im **Hotseat-Modus**: mehrere Spieler teilen sich ein Ger?t und geben es abwechselnd weiter).
 
@@ -118,19 +118,18 @@ Am **Ende deines Zuges** legst du **genau eine Karte** offen auf den Ablagestape
 
 ---
 
-## Die 51-Punkte-Regel (Er?ffnung)
+## Er?ffnung
 
 Bevor du **zum ersten Mal** Karten auslegen darfst, musst du die **Er?ffnung** schaffen:
 
-- Lege ein oder mehrere Pers aus deiner Hand aus.
-- Die **Summe der Punktwerte** dieser ersten Auslage muss **mindestens 51** betragen.
-- Erst danach giltst du als **?er?ffnet?** (`hasOpened`).
+- Sammle ein oder mehrere g?ltige Pers in der Auslage-Vorbereitung.
+- Lege sie dann **auf einmal** auf den Tisch (**Er?ffnen**).
+- Erst danach giltst du als **er?ffnet**.
 
 **Beispiel f?r eine g?ltige Er?ffnung:**
 
-- Satz ?K ? ?K ? ?K = 30 Punkte
-- Satz ?7 ? ?7 ? ?7 = 21 Punkte
-- **Gesamt: 51 Punkte** ? Er?ffnung erfolgreich
+- Satz ?K ?K ?K = ein Per
+- Du kannst auch mehrere Pers gleichzeitig aufdecken, z. B. zus?tzlich ?7 ?7 ?7
 
 Bis zur Er?ffnung darfst du **keine einzelnen Pers** auslegen und **nichts an bestehende Pers anlegen**.
 
@@ -198,7 +197,7 @@ Beispiel: Anzeige 7? ? Tron = 8?
 
 ### Sonderstrafen
 
-- **-100 Punkte:** Ein anderer er?ffnet, du h?ttest aus deiner Hand ebenfalls er?ffnen k?nnen (?51), hast es aber nicht getan
+- **-100 Punkte:** Ein anderer er?ffnet, du h?ttest aus deiner Hand ebenfalls er?ffnen k?nnen (mindestens ein g?ltiges Per), hast es aber nicht getan
 - **Tron-Sieg:** Gewinn durch Abwerfen der Tron-Karte (oder Joker) ? Gegner-Strafpunkte ?2 (stapelt mit Farb-Multiplikator)
 
 ---
@@ -211,7 +210,7 @@ Beispiel: Anzeige 7? ? Tron = 8?
 4. Wenn der Zug wechselt, erscheint ein **?bergabe-Screen** ? gib das Ger?t an den n?chsten Spieler weiter und tippe auf **?Bereit?**.
 5. **Karten antippen**, um sie auszuw?hlen.
 6. **Ziehen:** Nachziehstapel oder Ablage antippen.
-7. **Er?ffnung:** Karten w?hlen ? ?Per zur Auslage? ? wiederholen, bis ? 51 Punkte ? ?Er?ffnen?.
+7. **Er?ffnung:** Karten w?hlen ? ?Per zur Auslage? ? wiederholen ? ?Er?ffnen?.
 8. **Nach Er?ffnung:** Pers auslegen oder an bestehende Pers anlegen (Per antippen).
 9. **Zug beenden:** genau eine Karte w?hlen ? ?Abwerfen & Zug beenden?.
 
@@ -246,7 +245,7 @@ Es gibt viele regionale Abweichungen bei Elli Bir (Startkarten, Joker-Regeln, Pu
 
 - 14 Startkarten
 - 2 Decks + 4 Joker
-- 51-Punkte-Er?ffnung
+- Eröffnung mit Auslage-Vorbereitung (mindestens ein Per)
 - Tron-Regeln mit Anzeigekarte und Farb-Multiplikator
 - Ass w?hlbar (1 oder 11)
 
