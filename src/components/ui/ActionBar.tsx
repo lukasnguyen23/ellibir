@@ -32,21 +32,12 @@ function Btn({
 }
 
 export function ActionBar({ game }: { game: GameState }) {
-  const {
-    selectedCardIds,
-    trayGroups,
-    addSelectionToTray,
-    clearTray,
-    commitOpening,
-    layMeldFromSelection,
-    discardSelected,
-  } = useGameStore();
+  const { selectedCardIds, stageMeldFromSelection, discardSelected } = useGameStore();
 
-  const player = game.players[game.currentPlayerIndex];
   const phase = game.turnPhase;
   const validation = selectionValidation(game, selectedCardIds);
-  const trayTotal = trayGroups.reduce((sum, g) => sum + g.points, 0);
-  const canCommitOpening = trayGroups.length > 0;
+  const player = game.players[game.currentPlayerIndex];
+  const pendingCount = player.pendingMelds.length;
 
   return (
     <div className="flex items-center gap-2 flex-wrap justify-center">
@@ -56,36 +47,24 @@ export function ActionBar({ game }: { game: GameState }) {
         </span>
       )}
 
-      {phase === 'meld' && !player.hasOpened && (
-        <>
-          <Btn onClick={addSelectionToTray} disabled={!validation} variant="default">
-            Per zur Auslage {validation ? `(+${validation.points})` : ''}
-          </Btn>
-          <Btn onClick={commitOpening} disabled={!canCommitOpening} variant="primary">
-            Eröffnen{trayTotal > 0 ? ` (${trayTotal} Pkt.)` : ''}
-          </Btn>
-          {trayGroups.length > 0 && (
-            <Btn onClick={clearTray} variant="default">
-              Auslage zurücknehmen
-            </Btn>
-          )}
-        </>
-      )}
-
-      {phase === 'meld' && player.hasOpened && (
-        <Btn onClick={layMeldFromSelection} disabled={!validation} variant="primary">
-          Per auslegen {validation ? `(${validation.points})` : ''}
-        </Btn>
-      )}
-
       {phase === 'meld' && (
-        <Btn
-          onClick={discardSelected}
-          disabled={selectedCardIds.length !== 1}
-          variant="danger"
-        >
-          Abwerfen &amp; Zug beenden
-        </Btn>
+        <>
+          <Btn onClick={stageMeldFromSelection} disabled={!validation} variant="primary">
+            Per zur Ablage
+          </Btn>
+          {pendingCount > 0 && (
+            <span className="text-xs text-white/50">
+              {pendingCount} in Ablage · 0 Pkt. · Aufdecken wenn Hand leer
+            </span>
+          )}
+          <Btn
+            onClick={discardSelected}
+            disabled={selectedCardIds.length !== 1}
+            variant="danger"
+          >
+            Abwerfen &amp; Zug beenden
+          </Btn>
+        </>
       )}
     </div>
   );

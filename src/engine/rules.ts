@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   aceValue: 11,
   jokerCount: 4,
   startingCards: 14,
+  totalRounds: 1,
 };
 
 export interface CreateGameOptions {
@@ -16,10 +17,20 @@ export interface CreateGameOptions {
   players: { id: string; name: string }[];
   settings?: Partial<GameSettings>;
   seed?: number;
+  roundNumber?: number;
+  scoresByPlayerId?: Record<string, number>;
 }
 
 export function createGame(options: CreateGameOptions): GameState {
-  const settings: GameSettings = { ...DEFAULT_SETTINGS, ...options.settings };
+  if (options.players.length < 2 || options.players.length > 7) {
+    throw new Error('Spieleranzahl muss zwischen 2 und 7 liegen.');
+  }
+
+  const settings: GameSettings = {
+    ...DEFAULT_SETTINGS,
+    ...options.settings,
+    totalRounds: Math.min(10, Math.max(1, options.settings?.totalRounds ?? DEFAULT_SETTINGS.totalRounds)),
+  };
   const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
 
   const { hands, drawPile, discardPile, indicatorCard, startingPlayerIndex } = dealCards(
@@ -36,8 +47,8 @@ export function createGame(options: CreateGameOptions): GameState {
     id: p.id,
     name: p.name,
     hand: hands[i],
-    hasOpened: false,
-    score: 0,
+    pendingMelds: [],
+    score: options.scoresByPlayerId?.[p.id] ?? 0,
   }));
 
   const starter = players[startingPlayerIndex];
@@ -55,8 +66,10 @@ export function createGame(options: CreateGameOptions): GameState {
     turnPhase: 'meld',
     status: 'playing',
     winnerId: null,
+    roundNumber: options.roundNumber ?? 1,
     log: [
       `Spiel gestartet mit ${players.length} Spielern.`,
+      `Runde ${options.roundNumber ?? 1} von ${settings.totalRounds}.`,
       `Anzeige: ${cardLabel(indicatorCard)} (×${mult}) – Tron: ${cardLabel({ ...indicatorCard, rank: tron.rank, suit: tron.suit, isJoker: false })}`,
       `${starter.name} beginnt mit 15 Karten.`,
     ],

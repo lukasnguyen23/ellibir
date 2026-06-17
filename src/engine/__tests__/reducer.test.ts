@@ -9,8 +9,8 @@ function makeState(hand: Card[], overrides: Partial<GameState> = {}): GameState 
     id: 'test',
     settings: { ...DEFAULT_SETTINGS },
     players: [
-      { id: 'p1', name: 'A', hand, hasOpened: false, score: 0 },
-      { id: 'p2', name: 'B', hand: [card('clubs', '2')], hasOpened: false, score: 0 },
+      { id: 'p1', name: 'A', hand, pendingMelds: [], score: 0 },
+      { id: 'p2', name: 'B', hand: [card('clubs', '2')], pendingMelds: [], score: 0 },
     ],
     drawPile: [card('spades', '4'), card('spades', '5')],
     discardPile: [card('diamonds', '9')],
@@ -21,6 +21,7 @@ function makeState(hand: Card[], overrides: Partial<GameState> = {}): GameState 
     turnPhase: 'meld',
     status: 'playing',
     winnerId: null,
+    roundNumber: 1,
     log: [],
     ...overrides,
   };
@@ -42,96 +43,91 @@ describe('Ziehen', () => {
   });
 });
 
-describe('Eröffnung', () => {
-  it('akzeptiert Eröffnung mit einem kleinen Per', () => {
+describe('Verdeckte Ablage', () => {
+  it('legt ein Per verdeckt ab, nicht auf den Tisch', () => {
     const c = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
-    const state = makeState([...c]);
+    const state = makeState([...c, card('clubs', '2')]);
     const res = applyMove(state, {
-      type: 'LAY_INITIAL_MELDS',
-      melds: [{ cardIds: c.map((x) => x.id), type: 'set' }],
-    });
-    expect(res.ok).toBe(true);
-    expect(res.state.players[0].hasOpened).toBe(true);
-    expect(res.state.melds).toHaveLength(1);
-  });
-
-  it('akzeptiert Eröffnung mit mehreren Pers', () => {
-    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
-    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
-    const state = makeState([...set1, ...set2]);
-    const res = applyMove(state, {
-      type: 'LAY_INITIAL_MELDS',
-      melds: [
-        { cardIds: set1.map((x) => x.id), type: 'set' },
-        { cardIds: set2.map((x) => x.id), type: 'set' },
-      ],
-    });
-    expect(res.ok).toBe(true);
-    expect(res.state.players[0].hasOpened).toBe(true);
-    expect(res.state.melds).toHaveLength(2);
-    expect(res.state.players[0].hand).toHaveLength(0);
-  });
-
-  it('verhindert das Auslegen einzelner Pers vor der Eröffnung', () => {
-    const c = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
-    const state = makeState([...c]);
-    const res = applyMove(state, {
-      type: 'LAY_MELD',
+      type: 'STAGE_MELD',
       cardIds: c.map((x) => x.id),
       meldType: 'set',
     });
-    expect(res.ok).toBe(false);
+    expect(res.ok).toBe(true);
+    expect(res.state.melds).toHaveLength(0);
+    expect(res.state.players[0].pendingMelds).toHaveLength(1);
+    expect(res.state.players[0].hand).toHaveLength(1);
   });
 
-  it('vergibt -100 wenn anderer eröffnet und man die Tron-Karte hielt', () => {
+  it('deckt Pers auf wenn die Hand leer wird', () => {
     const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
     const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
-    const openerHand = [...set1, ...set2];
-    const tronHolderHand = [card('diamonds', '8'), card('clubs', '2'), card('clubs', '3')];
-    const state = makeState(openerHand, {
-      players: [
-        { id: 'p1', name: 'A', hand: openerHand, hasOpened: false, score: 0 },
-        { id: 'p2', name: 'B', hand: tronHolderHand, hasOpened: false, score: 0 },
-      ],
+    const state = makeState([...set1, ...set2]);
+    const res1 = applyMove(state, {
+      type: 'STAGE_MELD',
+      cardIds: set1.map((x) => x.id),
+      meldType: 'set',
     });
-    const res = applyMove(state, {
-      type: 'LAY_INITIAL_MELDS',
-      melds: [
-        { cardIds: set1.map((x) => x.id), type: 'set' },
-        { cardIds: set2.map((x) => x.id), type: 'set' },
-      ],
+    expect(res1.state.melds).toHaveLength(0);
+    expect(res1.state.players[0].pendingMelds).toHaveLength(1);
+
+    const res2 = applyMove(res1.state, {
+      type: 'STAGE_MELD',
+      cardIds: set2.map((x) => x.id),
+      meldType: 'set',
     });
-    expect(res.ok).toBe(true);
-    expect(res.state.players[1].score).toBe(-100);
+    expect(res2.state.status).toBe('finished');
+    expect(res2.state.melds).toHaveLength(2);
+    expect(res2.state.players[0].pendingMelds).toHaveLength(0);
   });
 
-  it('vergibt keine -100 ohne Tron-Karte auf der Hand', () => {
-    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
-    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
-    const extra = card('clubs', '4');
-    const openerHand = [...set1, ...set2, extra];
-    const noTronHand = [
-      card('hearts', '5'),
-      card('spades', '5'),
-      card('clubs', '5'),
-      card('clubs', '2'),
-    ];
-    const state = makeState(openerHand, {
-      players: [
-        { id: 'p1', name: 'A', hand: openerHand, hasOpened: false, score: 0 },
-        { id: 'p2', name: 'B', hand: noTronHand, hasOpened: false, score: 0 },
-      ],
+  it('deckt verdeckte Pers auf und gewinnt wenn die letzte Karte abgeworfen wird', () => {
+    const meldCards = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
+    const toss = card('clubs', '2');
+    const state = makeState([...meldCards, toss]);
+    const staged = applyMove(state, {
+      type: 'STAGE_MELD',
+      cardIds: meldCards.map((x) => x.id),
+      meldType: 'set',
     });
-    const res = applyMove(state, {
-      type: 'LAY_INITIAL_MELDS',
-      melds: [
-        { cardIds: set1.map((x) => x.id), type: 'set' },
-        { cardIds: set2.map((x) => x.id), type: 'set' },
-      ],
+    expect(staged.state.melds).toHaveLength(0);
+
+    const discarded = applyMove(staged.state, { type: 'DISCARD', cardId: toss.id });
+    expect(discarded.state.status).toBe('finished');
+    expect(discarded.state.melds).toHaveLength(1);
+    expect(discarded.state.players[0].pendingMelds).toHaveLength(0);
+    expect(discarded.state.winnerId).toBe('p1');
+  });
+
+  it('behält verdeckte Pers wenn nach Abwurf noch Karten auf der Hand sind', () => {
+    const meldCards = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
+    const keep = card('clubs', '2');
+    const toss = card('clubs', '3');
+    const state = makeState([...meldCards, keep, toss]);
+    const staged = applyMove(state, {
+      type: 'STAGE_MELD',
+      cardIds: meldCards.map((x) => x.id),
+      meldType: 'set',
     });
-    expect(res.ok).toBe(true);
-    expect(res.state.players[1].score).toBe(0);
-    expect(res.state.status).toBe('playing');
+    const discarded = applyMove(staged.state, { type: 'DISCARD', cardId: toss.id });
+    expect(discarded.state.melds).toHaveLength(0);
+    expect(discarded.state.players[0].pendingMelds).toHaveLength(1);
+    expect(discarded.state.currentPlayerIndex).toBe(1);
+  });
+
+  it('nimmt ein verdecktes Per zurück in die Hand', () => {
+    const meldCards = [card('hearts', '5'), card('spades', '5'), card('diamonds', '5')];
+    const extra = card('clubs', '2');
+    const state = makeState([...meldCards, extra]);
+    const staged = applyMove(state, {
+      type: 'STAGE_MELD',
+      cardIds: meldCards.map((x) => x.id),
+      meldType: 'set',
+    });
+    const pendingId = staged.state.players[0].pendingMelds[0].id;
+    const unstaged = applyMove(staged.state, { type: 'UNSTAGE_MELD', pendingMeldId: pendingId });
+    expect(unstaged.ok).toBe(true);
+    expect(unstaged.state.players[0].pendingMelds).toHaveLength(0);
+    expect(unstaged.state.players[0].hand).toHaveLength(4);
   });
 });
 
@@ -148,33 +144,15 @@ describe('Abwerfen & Zugwechsel', () => {
   });
 });
 
-describe('Siegbedingung', () => {
-  it('beendet das Spiel mit Restkarten-Strafe', () => {
-    const set1 = [card('hearts', 'K'), card('spades', 'K'), card('diamonds', 'K')];
-    const set2 = [card('hearts', '7'), card('spades', '7'), card('diamonds', '7')];
-    const state = makeState([...set1, ...set2]);
-    const res = applyMove(state, {
-      type: 'LAY_INITIAL_MELDS',
-      melds: [
-        { cardIds: set1.map((x) => x.id), type: 'set' },
-        { cardIds: set2.map((x) => x.id), type: 'set' },
-      ],
-    });
-    expect(res.state.status).toBe('finished');
-    expect(res.state.winnerId).toBe('p1');
-    expect(res.state.players[1].score).toBeGreaterThan(0);
-  });
-});
-
 describe('Anlegen an Pers', () => {
-  it('legt eine passende Karte an einen Lauf an', () => {
+  it('legt eine passende Karte an einen sichtbaren Lauf an', () => {
     const runCards = [card('clubs', '5'), card('clubs', '6'), card('clubs', '7')];
     const extra = card('clubs', '8');
     const state = makeState([extra], {
       melds: [{ id: 'm1', type: 'run', cards: runCards, ownerId: 'p1' }],
       players: [
-        { id: 'p1', name: 'A', hand: [extra], hasOpened: true, score: 0 },
-        { id: 'p2', name: 'B', hand: [card('clubs', '2')], hasOpened: false, score: 0 },
+        { id: 'p1', name: 'A', hand: [extra], pendingMelds: [], score: 0 },
+        { id: 'p2', name: 'B', hand: [card('clubs', '2')], pendingMelds: [], score: 0 },
       ],
     });
     const res = applyMove(state, { type: 'APPEND_TO_MELD', meldId: 'm1', cardIds: [extra.id] });

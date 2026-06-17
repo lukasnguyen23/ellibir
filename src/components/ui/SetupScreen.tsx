@@ -8,8 +8,17 @@ interface Props {
 
 export function SetupScreen({ onStart }: Props) {
   const [count, setCount] = useState(2);
-  const [names, setNames] = useState<string[]>(['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4']);
+  const [names, setNames] = useState<string[]>([
+    'Spieler 1',
+    'Spieler 2',
+    'Spieler 3',
+    'Spieler 4',
+    'Spieler 5',
+    'Spieler 6',
+    'Spieler 7',
+  ]);
   const [aceValue, setAceValue] = useState<1 | 11>(11);
+  const [totalRounds, setTotalRounds] = useState(3);
 
   const updateName = (i: number, value: string) => {
     setNames((prev) => prev.map((n, idx) => (idx === i ? value : n)));
@@ -20,27 +29,27 @@ export function SetupScreen({ onStart }: Props) {
       id: `p${i + 1}`,
       name: names[i]?.trim() || `Spieler ${i + 1}`,
     }));
-    onStart(players, { aceValue });
+    onStart(players, { aceValue, totalRounds });
   };
 
   return (
-    <div className="table-felt relative w-full h-full flex items-center justify-center p-4">
+    <div className="casino-room relative w-full h-full flex items-center justify-center p-4">
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative z-10 w-full max-w-md rounded-2xl bg-black/40 backdrop-blur-md border border-gold-400/30 p-7 shadow-2xl"
+        className="relative z-10 w-full max-w-md rounded-2xl casino-panel p-7 shadow-2xl"
       >
         <h1 className="font-display text-4xl text-gold-400 text-center tracking-wide">Elli Bir</h1>
-        <p className="text-center text-white/60 text-sm mb-6">Das Kartenspiel für 2–4 Spieler</p>
+        <p className="text-center text-white/60 text-sm mb-6">Das Kartenspiel für 2–7 Spieler</p>
 
         <label className="block text-sm text-white/80 mb-2">Anzahl Spieler</label>
-        <div className="flex gap-2 mb-5">
-          {[2, 3, 4].map((n) => (
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          {Array.from({ length: 6 }, (_, i) => i + 2).map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setCount(n)}
-              className={`flex-1 py-2 rounded-lg font-semibold transition ${
+              className={`w-9 h-9 rounded-lg text-sm font-semibold transition ${
                 count === n ? 'bg-gold-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'
               }`}
             >
@@ -56,9 +65,25 @@ export function SetupScreen({ onStart }: Props) {
               key={i}
               value={names[i]}
               onChange={(e) => updateName(i, e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/10 text-white placeholder-white/40 border border-white/10 focus:border-gold-400 outline-none"
+              className="w-full px-3 py-2 rounded-lg bg-white/10 text-white placeholder-white/40 border border-brass-500/20 focus:border-brass-400 outline-none"
               placeholder={`Spieler ${i + 1}`}
             />
+          ))}
+        </div>
+
+        <label className="block text-sm text-white/80 mb-2">Anzahl Runden</label>
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setTotalRounds(n)}
+              className={`w-9 h-9 rounded-lg text-sm font-semibold transition ${
+                totalRounds === n ? 'bg-gold-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              {n}
+            </button>
           ))}
         </div>
 

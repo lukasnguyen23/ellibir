@@ -2,34 +2,23 @@ import { create } from 'zustand';
 import { applyMove } from '@/engine/gameReducer';
 import { detectMeld, validateMeld } from '@/engine/melds';
 import { createGame } from '@/engine/rules';
-import type { Card, GameSettings, GameState, MeldType, Move } from '@/engine/types';
-
-/** Eine vorbereitete Kombination in der "Auslage" (vor dem Bestätigen). */
-export interface TrayGroup {
-  id: string;
-  type: MeldType;
-  cards: Card[];
-  points: number;
-}
+import type { Card, GameSettings, GameState, Move } from '@/engine/types';
 
 interface GameStore {
   game: GameState | null;
   selectedCardIds: string[];
-  trayGroups: TrayGroup[];
   toast: { id: number; message: string; kind: 'error' | 'info' } | null;
 
   newGame: (players: { id: string; name: string }[], settings?: Partial<GameSettings>) => void;
+  nextRound: () => void;
+  exitToMenu: () => void;
   dispatch: (move: Move) => boolean;
 
   toggleSelect: (cardId: string) => void;
   clearSelection: () => void;
 
-  addSelectionToTray: () => void;
-  removeTrayGroup: (groupId: string) => void;
-  clearTray: () => void;
-  commitOpening: () => void;
-
-  layMeldFromSelection: () => void;
+  stageMeldFromSelection: () => void;
+  unstagePendingMeld: (pendingMeldId: string) => void;
   appendSelectionToMeld: (meldId: string) => void;
   discardSelected: () => void;
 
@@ -42,16 +31,36 @@ let toastSeq = 0;
 export const useGameStore = create<GameStore>((set, get) => ({
   game: null,
   selectedCardIds: [],
-  trayGroups: [],
   toast: null,
 
   newGame: (players, settings) => {
     set({
       game: createGame({ players, settings }),
       selectedCardIds: [],
-      trayGroups: [],
       toast: null,
     });
+  },
+
+  nextRound: () => {
+    const { game } = get();
+    if (!game || game.status !== 'finished') return;
+    if (game.roundNumber >= game.settings.totalRounds) return;
+
+    const scores = Object.fromEntries(game.players.map((p) => [p.id, p.score]));
+    set({
+      game: createGame({
+        players: game.players.map((p) => ({ id: p.id, name: p.name })),
+        settings: game.settings,
+        roundNumber: game.roundNumber + 1,
+        scoresByPlayerId: scores,
+      }),
+      selectedCardIds: [],
+      toast: null,
+    });
+  },
+
+  exitToMenu: () => {
+    set({ game: null, selectedCardIds: [], toast: null });
   },
 
   dispatch: (move) => {
@@ -77,56 +86,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   clearSelection: () => set({ selectedCardIds: [] }),
 
-  addSelectionToTray: () => {
-    const { game, selectedCardIds, trayGroups } = get();
-    if (!game) return;
-    const player = game.players[game.currentPlayerIndex];
-    const cards = selectedCardIds
-      .map((id) => player.hand.find((c) => c.id === id))
-      .filter((c): c is Card => Boolean(c));
-    if (cards.length < 3) {
-      get().showToast('Ein Per braucht mindestens 3 Karten.', 'error');
-      return;
-    }
-    const validation = detectMeld(cards, game.settings.aceValue, game.tron);
-    if (!validation) {
-      get().showToast('Diese Karten bilden kein gültiges Per.', 'error');
-      return;
-    }
-    set({
-      trayGroups: [
-        ...trayGroups,
-        {
-          id: `tray-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          type: validation.type,
-          cards: validation.orderedCards,
-          points: validation.points,
-        },
-      ],
-      selectedCardIds: [],
-    });
-  },
-
-  removeTrayGroup: (groupId) =>
-    set({ trayGroups: get().trayGroups.filter((g) => g.id !== groupId) }),
-
-  clearTray: () => set({ trayGroups: [] }),
-
-  commitOpening: () => {
-    const { game, trayGroups, dispatch } = get();
-    if (!game) return;
-    if (trayGroups.length === 0) {
-      get().showToast('Mindestens ein Per zur Auslage hinzufügen.', 'error');
-      return;
-    }
-    const ok = dispatch({
-      type: 'LAY_INITIAL_MELDS',
-      melds: trayGroups.map((g) => ({ cardIds: g.cards.map((c) => c.id), type: g.type })),
-    });
-    if (ok) set({ trayGroups: [], selectedCardIds: [] });
-  },
-
-  layMeldFromSelection: () => {
+  stageMeldFromSelection: () => {
     const { game, selectedCardIds, dispatch } = get();
     if (!game) return;
     const player = game.players[game.currentPlayerIndex];
@@ -139,11 +99,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     const ok = dispatch({
-      type: 'LAY_MELD',
+      type: 'STAGE_MELD',
       cardIds: cards.map((c) => c.id),
       meldType: validation.type,
     });
     if (ok) set({ selectedCardIds: [] });
+  },
+
+  unstagePendingMeld: (pendingMeldId) => {
+    get().dispatch({ type: 'UNSTAGE_MELD', pendingMeldId });
   },
 
   appendSelectionToMeld: (meldId) => {
@@ -163,7 +127,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     const ok = dispatch({ type: 'DISCARD', cardId: selectedCardIds[0] });
-    if (ok) set({ selectedCardIds: [], trayGroups: [] });
+    if (ok) set({ selectedCardIds: [] });
   },
 
   showToast: (message, kind = 'info') => {

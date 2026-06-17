@@ -59,14 +59,16 @@ export interface GameSettings {
   jokerCount: number;
   /** Startkarten pro Spieler. */
   startingCards: number;
+  /** Geplante Anzahl Runden (1–10). */
+  totalRounds: number;
 }
 
 export interface PlayerState {
   id: string;
   name: string;
   hand: Card[];
-  /** Hat der Spieler bereits eröffnet (erste Auslage aufgedeckt)? */
-  hasOpened: boolean;
+  /** Verdeckt gelegte Pers — werden erst sichtbar, wenn die Hand leer ist. */
+  pendingMelds: Meld[];
   /** Strafpunkte / Score über mehrere Runden. */
   score: number;
 }
@@ -84,20 +86,18 @@ export interface GameState {
   turnPhase: TurnPhase;
   status: GameStatus;
   winnerId: string | null;
+  /** Aktuelle Runde (1 … totalRounds). */
+  roundNumber: number;
   log: string[];
 }
 
 export type Move =
   | { type: 'DRAW_STOCK' }
   | { type: 'DRAW_DISCARD' }
-  /** Erste Auslage: mehrere Pers gleichzeitig beim Aufdecken. */
-  | { type: 'LAY_INITIAL_MELDS'; melds: { cardIds: string[]; type: MeldType }[] }
-  /** Weitere Auslage nach erfolgter Eröffnung. */
-  | { type: 'LAY_MELD'; cardIds: string[]; meldType: MeldType }
-  /** Karten an ein bestehendes Per anlegen. */
+  | { type: 'STAGE_MELD'; cardIds: string[]; meldType: MeldType }
+  | { type: 'UNSTAGE_MELD'; pendingMeldId: string }
   | { type: 'APPEND_TO_MELD'; meldId: string; cardIds: string[] }
   | { type: 'DISCARD'; cardId: string }
-  /** Reine UI-Hilfe: Handkarten umsortieren. */
   | { type: 'SORT_HAND'; playerId: string; orderedCardIds: string[] };
 
 export interface MoveResult {

@@ -36,4 +36,12 @@ describe('Deck', () => {
     const { drawPile, indicatorCard } = dealCards(2, 14, 4, 42);
     expect(drawPile.some((c) => c.id === indicatorCard.id)).toBe(false);
   });
+
+  it('unterstützt bis zu 7 Spieler', () => {
+    const { hands, drawPile, discardPile, indicatorCard } = dealCards(7, 14, 4, 777);
+    expect(hands).toHaveLength(7);
+    expect(hands.reduce((s, h) => s + h.length, 0)).toBe(14 * 7 + 1);
+    expect(hands.flat().length + drawPile.length + discardPile.length + 1).toBe(2 * 52 + 4);
+    expect(indicatorCard.isJoker).toBe(false);
+  });
 });

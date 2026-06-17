@@ -47,7 +47,7 @@ function SortableCard({
         transition,
         zIndex: isDragging ? 50 : undefined,
       }}
-      className="-ml-3 first:ml-0"
+      className="shrink-0"
     >
       <PlayingCard
         card={card}
@@ -76,7 +76,7 @@ export function Hand({ cards, tron, selectedIds, onToggle, onReorder }: HandProp
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={cards.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-        <div className="flex items-end px-4 pt-6 pb-2">
+        <div className="flex items-end gap-2 px-4 pt-6 pb-2 overflow-x-auto flex-nowrap min-w-0">
           {cards.map((card) => (
             <SortableCard
               key={card.id}

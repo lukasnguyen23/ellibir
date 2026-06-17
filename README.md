@@ -1,252 +1,228 @@
-# Elli Bir
+# Elli Bir — Spielregeln
 
-**Elli Bir** ist ein Kartenspiel f?r 2 bis 4 Spieler. Ziel ist es, als Erster alle Karten loszuwerden, indem du Kombinationen (**Per**) bildest und auslegst.
+**Elli Bir** ist ein Kartenspiel für **2 bis 7 Spieler**. Ziel ist es, als Erster alle Handkarten loszuwerden, indem du Kombinationen (**Per**) bildest und auslegst.
 
-Dieses Repository enth?lt eine digitale Version als **React-Webapp** (aktuell im **Hotseat-Modus**: mehrere Spieler teilen sich ein Ger?t und geben es abwechselnd weiter).
-
----
-
-## Spiel starten
-
-```bash
-npm install
-npm run dev
-```
-
-Dann im Browser ?ffnen: [http://localhost:5173](http://localhost:5173)
-
-> **Hinweis:** Falls `node` oder `npm` nicht gefunden werden, muss Node.js installiert sein oder im PATH liegen.
+Diese Datei beschreibt die **aktuell in der App umgesetzten Regeln** (`src/engine/`). Abweichungen von regionalen Hausregeln sind am Ende aufgeführt.
 
 ---
 
 ## Spielziel
 
-Wer als Erster **alle Handkarten ausgelegt** hat und **keine Karte mehr auf der Hand** h?lt, gewinnt die Runde. Die ?brigen Spieler z?hlen die Punkte ihrer verbleibenden Handkarten als **Strafpunkte**.
+Wer als Erster **keine Karte mehr auf der Hand** hat, gewinnt die Runde. Alle anderen Spieler erhalten **Strafpunkte** für die Karten, die noch auf der Hand liegen (nach Abzug optimaler Pers — siehe [Strafpunkte](#strafpunkte)).
 
 ---
 
 ## Material
 
-| Element | In dieser App |
+| Element | Wert |
 |---|---|
-| Spieler | 2 bis 4 |
-| Kartens?tze | 2 vollst?ndige S?tze (104 Karten) |
+| Spieler | 2 bis 7 |
+| Kartensätze | 2 vollständige Französische Blätter (104 Karten) |
 | Joker | 4 |
-| Startkarten pro Spieler | 14 |
-| Nachziehstapel | alle ?brigen Karten |
+| Startkarten | **14** pro Spieler |
+| Startspieler | erhält **1 Karte extra** → **15 Karten** |
+| Nachziehstapel | alle übrigen Karten |
 | Ablagestapel | eine offene Startkarte |
+| Anzeigekarte | eine separate offene Karte (bestimmt den Tron) |
 
 ---
 
-## Was ist ein ?Per??
-
-Ein **Per** ist eine g?ltige Kombination aus **mindestens 3 Karten**. Es gibt zwei Arten:
-
-### 1. Satz (gleicher Wert, verschiedene Farben)
-
-Drei oder vier Karten mit **demselben Wert**, aber in **unterschiedlichen Farben**.
-
-Beispiele:
-
-- ?7 ? ?7 ? ?7
-- ?K ? ?K ? ?K ? ?K
-
-Jede Farbe darf im Satz nur **einmal** vorkommen.
-
-### 2. Lauf (aufeinanderfolgende Werte, gleiche Farbe)
-
-Drei oder mehr Karten **derselben Farbe** mit **aufeinanderfolgenden Werten**.
-
-Beispiele:
-
-- ?5 ? ?6 ? ?7
-- ?10 ? ?B ? ?D ? ?K
-- ?Q ? ?K ? ?A (Ass kann auch hoch gez?hlt werden)
-
----
-
-## Joker (mit Tron)
-
-Joker z?hlen als **Tron-Karte** (z. B. bei Tron 8? ist der Joker die 8?). Sie passen nur in Pers, wenn der Slot **genau diese Karte** braucht. Details siehe [Tron-Regeln](#tron-regeln).
-
----
-
-## Punktwerte
+## Kartenwerte (Punkte)
 
 | Karte | Punkte |
 |---|---|
 | 2 bis 10 | Zahlenwert (z. B. 7 = 7 Punkte) |
-| Bube, Dame, K?nig | je 10 Punkte |
-| Ass | **1 oder 11 Punkte** (vor Spielbeginn festlegen) |
-| Joker (in der Hand) | Tron-Punktwert |
+| Bube, Dame, König | je **10** Punkte |
+| Ass | **1 oder 11** Punkte (vor Spielbeginn wählbar) |
+| Joker (in der Hand) | Punktwert der **Tron-Karte** |
+| Echte Tron-Karte (in der Hand) | Punktwert der **Tron-Karte** |
+
+---
+
+## Was ist ein Per?
+
+Ein **Per** ist eine gültige Kombination aus **mindestens 3 Karten**. Es gibt zwei Arten:
+
+### Satz (Set)
+
+Drei oder vier Karten mit **demselben Wert** in **unterschiedlichen Farben**.
+
+- Beispiel: ♥7 ♠7 ♦7
+- Beispiel: ♣K ♥K ♠K ♦K
+- Jede Farbe darf im Satz nur **einmal** vorkommen.
+- Maximal **4** Karten pro Satz.
+
+### Lauf (Run)
+
+Drei bis dreizehn Karten **derselben Farbe** mit **aufeinanderfolgenden Werten**.
+
+- Beispiel: ♣5 ♣6 ♣7
+- Beispiel: ♥10 ♥B ♥D ♥K
+- Das Ass kann **tief** (… Q–K–A) oder **hoch** (… J–Q–K–A bzw. A als 14) gezählt werden — der Lauf muss danach lückenlos sein.
 
 ---
 
 ## Vorbereitung
 
-1. Jeder Spieler erh?lt **14 Karten**.
-2. Die restlichen Karten bilden den **Nachziehstapel**.
-3. Eine Karte wird **offen** daneben gelegt und startet den **Ablagestapel** (kein Joker als Startkarte).
+1. Jeder Spieler erhält **14 Karten**.
+2. Ein **zufällig gewählter Startspieler** bekommt **eine zusätzliche Karte** (insgesamt **15**).
+3. Eine Karte wird als **Anzeigekarte** offen neben die Stapel gelegt (kein Joker).
+4. Eine weitere Karte startet den **Ablagestapel** (kein Joker, falls möglich).
+5. Alle übrigen Karten bilden den **Nachziehstapel**.
+
+Der **Startspieler** beginnt direkt in der **Auslage-Phase** (ohne vorher zu ziehen) und muss am Ende des Zuges eine Karte abwerfen.
 
 ---
 
 ## Spielablauf
 
-Die Spieler sind **reihum** dran. In deinem Zug gehst du in dieser Reihenfolge vor:
+Die Spieler sind **reihum** dran. Jeder Zug (außer dem allerersten Zug des Startspielers) hat diese Phasen:
 
-### 1. Karte ziehen
+### 1. Ziehen
 
 Du musst **genau eine** Karte aufnehmen:
 
 - die **oberste Karte vom Nachziehstapel**, oder
-- die **oberste Karte vom Ablagestapel** (die offen liegende Karte).
+- die **oberste Karte vom Ablagestapel**.
 
-### 2. Kombinationen auslegen (optional)
+Ist der Nachziehstapel leer, wird der Ablagestapel (ohne die oberste Karte) gemischt und als neuer Nachziehstapel verwendet.
 
-Falls m?glich, darfst du jetzt Karten aus deiner Hand auslegen:
+### 2. Auslegen (optional)
 
-- als neues **Per** auf den Tisch, oder
-- an ein **bereits ausgelegtes Per** anlegen (siehe unten).
+Du darfst — musst aber nicht — Karten auslegen:
 
-Du musst in diesem Schritt **nicht** auslegen ? du darfst auch direkt abwerfen.
+- **neue Pers** auf den Tisch legen, und/oder
+- Karten an **bereits ausgelegte Pers** anlegen (eigene oder fremde).
 
-### 3. Eine Karte abwerfen
+### 3. Abwerfen
 
-Am **Ende deines Zuges** legst du **genau eine Karte** offen auf den Ablagestapel. Erst dann ist der n?chste Spieler dran.
+Am **Ende deines Zuges** legst du **genau eine Karte** offen auf den Ablagestapel. Erst dann ist der nächste Spieler dran.
 
-> Du kannst nicht mit dem Abwerfen deiner letzten Karte gewinnen, wenn du in dem Zug noch keine Karte gezogen hast. Gewonnen wird, wenn nach dem Auslegen **keine Handkarte mehr ?brig** ist.
+**Sieg:** Hast du nach dem Auslegen **keine Handkarte mehr**, gewinnst du sofort — auch ohne Abwurf in diesem Zug.
 
----
+Pers darfst du in der **verdeckten Ablage** sammeln. Sie erscheinen erst auf dem Tisch, wenn **keine Karte mehr auf deiner Hand** liegt. An bereits sichtbare Pers auf dem Tisch darfst du jederzeit anlegen.
 
-## Er?ffnung
+### Verdeckte Ablage
 
-Bevor du **zum ersten Mal** Karten auslegen darfst, musst du die **Er?ffnung** schaffen:
-
-- Sammle ein oder mehrere g?ltige Pers in der Auslage-Vorbereitung.
-- Lege sie dann **auf einmal** auf den Tisch (**Er?ffnen**).
-- Erst danach giltst du als **er?ffnet**.
-
-**Beispiel f?r eine g?ltige Er?ffnung:**
-
-- Satz ?K ?K ?K = ein Per
-- Du kannst auch mehrere Pers gleichzeitig aufdecken, z. B. zus?tzlich ?7 ?7 ?7
-
-Bis zur Er?ffnung darfst du **keine einzelnen Pers** auslegen und **nichts an bestehende Pers anlegen**.
-
----
-
-## Nach der Er?ffnung
-
-Sobald du er?ffnet hast, darfst du in sp?teren Z?gen:
-
-- **weitere neue Pers** auslegen,
-- **Karten an bestehende Pers anlegen** (eigene oder fremde), sofern die Kombination danach noch g?ltig ist.
-
-Beispiele f?rs Anlegen:
-
-- ?8 an den Lauf ?5 ? ?6 ? ?7
-- ?9 an den Satz ?9 ? ?9 ? ?9
-
----
-
-## Spielende & Strafpunkte
-
-- Die Runde endet, sobald ein Spieler **alle Karten ausgelegt** hat.
-- Dieser Spieler **gewinnt** die Runde.
-- Alle anderen z?hlen **Strafpunkte** f?r ihre Restkarten (siehe Tron-Regeln).
+- Wähle ein gültiges Per → **Per zur Ablage**.
+- **Nur du** siehst die Karten in der Ablage — für Gegner bleiben sie verborgen, bis sie auf dem Tisch liegen.
+- Verdeckte Pers zählen **0 Punkte** (keine Punktwert-Anzeige, keine Wertung in der Ablage).
+- **Zurücknehmen:** Tippe ein Per in der Ablage an — die Karten kommen wieder in deine Hand.
+- Sobald deine **Hand leer** ist (alle Karten in der Ablage oder nach Abwurf der letzten Karte), werden alle verdeckten Pers **aufgedeckt** und liegen sichtbar auf dem Tisch.
+- An **bereits sichtbare** Pers (deine oder fremde) kannst du weiterhin Karten anlegen.
 
 ---
 
 ## Tron-Regeln
 
-### Anzeigekarte & Tron
+### Anzeigekarte und Tron
 
-Zu Beginn jeder Runde wird eine **Anzeigekarte** offen neben den Stapeln gelegt (separat vom Ablagestapel). Daraus ergibt sich der **Tron**:
+Die **Anzeigekarte** liegt separat vom Ablagestapel. Aus ihr ergibt sich der **Tron** — die nächsthöhere Karte **derselben Farbe**:
 
-**Rangfolge:** 2 ? 3 ? 4 ? 5 ? 6 ? 7 ? 8 ? 9 ? 10 ? Bube ? Dame ? K?nig ? Ass
+**Rangfolge:** 2 → 3 → … → 10 → Bube → Dame → König → Ass → 2
 
-| Anzeigekarte | Tron (gleiche Farbe) |
+| Anzeigekarte | Tron |
 |---|---|
-| 2 ? Dame | n?chsth?herer Rang |
-| K?nig | Ass |
-| Ass | 2 |
+| 2 bis Dame | nächsthöherer Rang, gleiche Farbe |
+| König | Ass (gleiche Farbe) |
+| Ass | 2 (gleiche Farbe) |
 
-Beispiel: Anzeige 7? ? Tron = 8?
+Beispiel: Anzeige 7♦ → Tron = **8♦**
 
-### Joker & Tron-Karte in Pers
+### Joker und Tron-Karte in Pers
 
-| Karte | Verhalten |
+| Karte | Verhalten in Pers |
 |---|---|
-| **Echte Tron-Karte** | ?berall in Pers einsetzbar (voller Ersatz) |
-| **Joker** | Z?hlt nur als Tron-Karte, **nur wenn der Slot genau passt** |
+| **Echte Tron-Karte** | Kann **überall** als Platzhalter eingesetzt werden (voller Wildcard) |
+| **Joker** | Zählt **nur als Tron-Karte** — und nur, wenn der Slot **genau** Tron (Farbe + Rang) braucht |
+
+Beispiel bei Tron 8♦: Der Joker ersetzt nur eine fehlende **8♦**, nicht eine beliebige 8 oder eine beliebige Karo-Karte.
 
 ### Straf-Multiplikator (Farbe der Anzeigekarte)
 
 | Farbe | Multiplikator |
 |---|---|
-| ? Kreuz | ?1 |
-| ? Pik | ?2 |
-| ? Herz | ?3 |
-| ? Karo | ?4 |
-
-**Strafberechnung f?r Verlierer:**
-
-1. Aus der Resthand werden g?ltige **Dreier-Pers** gebildet (so viele Karten wie m?glich)
-2. **Nur ?brige Karten** werden punktem??ig addiert
-3. Summe ? Farb-Multiplikator (?2 zus?tzlich bei **Tron-Abwurf-Sieg**)
-
-### Sonderstrafen
-
-- **-100 Punkte:** Ein anderer er?ffnet, bevor du es tust, obwohl du die **Tron-Karte** auf der Hand hattest
-- **Tron-Sieg:** Gewinn durch Abwerfen der Tron-Karte (oder Joker) ? Gegner-Strafpunkte ?2 (stapelt mit Farb-Multiplikator)
+| ♣ Kreuz | ×1 |
+| ♠ Pik | ×2 |
+| ♥ Herz | ×3 |
+| ♦ Karo | ×4 |
 
 ---
 
-## So spielst du die App (Hotseat)
+## Strafpunkte
 
-1. **Spieleranzahl** (2?4) und **Namen** eintragen.
-2. **Ass-Wert** w?hlen: 1 oder 11 Punkte.
-3. Auf **?Spiel starten?** klicken.
-4. Wenn der Zug wechselt, erscheint ein **?bergabe-Screen** ? gib das Ger?t an den n?chsten Spieler weiter und tippe auf **?Bereit?**.
-5. **Karten antippen**, um sie auszuw?hlen.
-6. **Ziehen:** Nachziehstapel oder Ablage antippen.
-7. **Er?ffnung:** Karten w?hlen ? ?Per zur Auslage? ? wiederholen ? ?Er?ffnen?.
-8. **Nach Er?ffnung:** Pers auslegen oder an bestehende Pers anlegen (Per antippen).
-9. **Zug beenden:** genau eine Karte w?hlen ? ?Abwerfen & Zug beenden?.
+Verliert ein Spieler die Runde, werden seine Restkarten bewertet:
 
-Handkarten lassen sich per **Drag & Drop** umsortieren.
+1. Aus der Hand werden **so viele gültige Pers wie möglich** gebildet (Sätze und Läufe, beliebige Länge ab 3).
+2. Nur die **übrigen Karten** (Deadwood) werden punktemäßig addiert.
+3. Diese Summe wird mit dem **Farb-Multiplikator** der Anzeigekarte multipliziert.
+
+### Tron-Sieg
+
+Gewinnt ein Spieler, indem er die **Tron-Karte oder einen Joker** abwirft, gilt für die Gegner-Strafpunkte ein **zusätzlicher Faktor ×2** (stapelt mit dem Farb-Multiplikator).
+
+**Beispiel:** Anzeige ♥ (×3), Gegner hat 20 Deadwood-Punkte, Sieg per Tron-Abwurf → 20 × 3 × 2 = **120 Strafpunkte**.
 
 ---
 
-## Technischer ?berblick
+## Kurzüberblick: ein Zug
+
+```
+Ziehen (1 Karte)
+    ↓
+Optional: Pers auslegen / anlegen
+    ↓
+Genau 1 Karte abwerfen → nächster Spieler
+```
+
+**Startspieler (15 Karten):** kein Ziehen → optional auslegen → abwerfen.
+
+---
+
+## App-Bedienung (Hotseat)
+
+Mehrere Spieler teilen sich ein Gerät und geben es abwechselnd weiter.
+
+1. Spieleranzahl (2–7), Namen, **Anzahl Runden** (1–10) und **Ass-Wert** (1 oder 11) einstellen.
+2. **Spiel starten** — bei Zugwechsel erscheint der Übergabe-Screen → **Bereit** tippen.
+3. **Ziehen:** Nachziehstapel oder Ablage antippen.
+4. **Per zur Ablage:** Karten wählen → **Per zur Ablage** (verdeckt, bis Hand leer).
+5. **Anlegen:** Karten wählen → sichtbares Per auf dem Tisch antippen.
+6. **Zug beenden:** genau eine Karte wählen → **Abwerfen & Zug beenden**.
+7. Handkarten per **Drag & Drop** umsortieren.
+
+**Kartenvorschau:** `http://localhost:5173/?preview=cards`
+
+---
+
+## Technik & Entwicklung
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm test         # Regel-Tests
+npm run build    # Produktions-Build
+```
 
 | Bereich | Technologie |
 |---|---|
 | Frontend | React, TypeScript, Vite |
 | Styling | Tailwind CSS |
-| Animationen | Framer Motion |
-| Drag & Drop | dnd-kit |
+| Spiel-Logik | `src/engine/` (reines TypeScript, UI-unabhängig) |
 | State | Zustand |
 | Tests | Vitest |
-| Geplant | Firebase / Firestore f?r Online-Multiplayer |
-
-Die **Spielregeln** liegen in `src/engine/` als reine TypeScript-Logik ? unabh?ngig von UI und Backend, damit sie sp?ter serverseitig validiert werden kann.
-
-```bash
-npm test      # Regel-Tests ausf?hren
-npm run build # Produktions-Build
-```
 
 ---
 
-## Regionale Varianten
+## In dieser App vs. regionale Varianten
 
-Es gibt viele regionale Abweichungen bei Elli Bir (Startkarten, Joker-Regeln, Punktwerte). Diese App verwendet aktuell:
+Diese Version verwendet bewusst:
 
-- 14 Startkarten
+- 14 Startkarten (+1 für Startspieler)
 - 2 Decks + 4 Joker
-- Er?ffnung mit Auslage-Vorbereitung (mindestens ein Per)
-- Tron-Regeln mit Anzeigekarte und Farb-Multiplikator
-- Ass w?hlbar (1 oder 11)
+- Pers in verdeckter Ablage; sichtbar erst bei leerer Hand
+- Tron mit Anzeigekarte, Joker nur als exakter Tron-Slot
+- Ass wählbar (1 oder 11)
+- Hotseat-Modus (kein Online-Multiplayer)
 
-Abweichungen von eurer Hausregel k?nnen sp?ter als Einstellungen erg?nzt werden.
+Abweichungen von euren Hausregeln können später als Einstellungen ergänzt werden.

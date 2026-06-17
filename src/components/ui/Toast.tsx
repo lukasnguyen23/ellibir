@@ -17,7 +17,7 @@ export function Toast({ toast }: Props) {
             className={`px-4 py-2 rounded-lg shadow-xl text-sm font-medium ${
               toast.kind === 'error'
                 ? 'bg-rose-600 text-white'
-                : 'bg-slate-800 text-white border border-white/10'
+                : 'casino-panel text-white border border-brass-400/40'
             }`}
           >
             {toast.message}

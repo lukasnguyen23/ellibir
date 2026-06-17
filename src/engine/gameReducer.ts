@@ -1,7 +1,7 @@
 import { validateMeld, validateRun, validateSet } from './melds';
 import { unmeldedPenalty } from './penalties';
-import { hasTronCardInHand, indicatorPenaltyMultiplier, isTronDiscard } from './tron';
-import type { Card, GameState, Meld, MeldType, Move, MoveResult, TronCard } from './types';
+import { indicatorPenaltyMultiplier, isTronDiscard } from './tron';
+import type { Card, GameState, MeldType, Move, MoveResult, PlayerState, TronCard } from './types';
 
 let meldCounter = 0;
 function nextMeldId(): string {
@@ -39,16 +39,6 @@ function advanceTurn(state: GameState): void {
   state.turnPhase = 'draw';
 }
 
-function applyMissedOpeningPenalties(state: GameState, openerId: string): void {
-  for (const p of state.players) {
-    if (p.id === openerId || p.hasOpened) continue;
-    if (hasTronCardInHand(p.hand, state.tron)) {
-      p.score -= 100;
-      state.log.push(`${p.name} hatte die Tron-Karte und hat nicht zuerst eröffnet: -100`);
-    }
-  }
-}
-
 function applyLoserPenalties(
   state: GameState,
   winnerId: string,
@@ -69,6 +59,21 @@ function applyLoserPenalties(
       );
     }
   }
+}
+
+function revealPendingMelds(state: GameState, player: PlayerState): boolean {
+  if (player.hand.length > 0 || player.pendingMelds.length === 0) return false;
+  const count = player.pendingMelds.length;
+  state.melds.push(...player.pendingMelds);
+  player.pendingMelds = [];
+  state.log.push(`${player.name} deckt ${count} verdeckte Per${count === 1 ? '' : 's'} auf.`);
+  return true;
+}
+
+function tryRevealAndFinish(state: GameState, discardedCard?: Card): boolean {
+  const player = state.players[state.currentPlayerIndex];
+  revealPendingMelds(state, player);
+  return finishIfEmpty(state, discardedCard);
 }
 
 function finishIfEmpty(state: GameState, discardedCard?: Card): boolean {
@@ -121,67 +126,37 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       return { ok: true, state };
     }
 
-    case 'LAY_INITIAL_MELDS': {
+    case 'STAGE_MELD': {
       if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
-      if (player.hasOpened) return err(prev, 'Du hast bereits eröffnet.');
-      if (move.melds.length === 0) return err(prev, 'Mindestens ein Per zur Eröffnung nötig.');
-
-      const usedIds = new Set<string>();
-      const newMelds: Meld[] = [];
-
-      for (const spec of move.melds) {
-        for (const id of spec.cardIds) {
-          if (usedIds.has(id)) return err(prev, 'Eine Karte wurde doppelt verwendet.');
-          usedIds.add(id);
-        }
-        const cards = pickCards(player.hand, spec.cardIds);
-        if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
-        const validation = validateMeld(cards, spec.type, aceValue, tron);
-        if (!validation.valid) return err(prev, validation.error ?? 'Ungültiges Per.');
-        newMelds.push({
-          id: nextMeldId(),
-          type: spec.type,
-          cards: validation.orderedCards,
-          ownerId: player.id,
-        });
-      }
-
-      player.hand = removeCards(player.hand, [...usedIds]);
-      player.hasOpened = true;
-      state.melds.push(...newMelds);
-      state.log.push(
-        `${player.name} eröffnet mit ${newMelds.length} Per${newMelds.length === 1 ? '' : 's'}.`,
-      );
-      applyMissedOpeningPenalties(state, player.id);
-      finishIfEmpty(state);
-      return { ok: true, state };
-    }
-
-    case 'LAY_MELD': {
-      if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
-      if (!player.hasOpened) {
-        return err(prev, 'Du musst zuerst eröffnen.');
-      }
       const cards = pickCards(player.hand, move.cardIds);
       if (!cards) return err(prev, 'Karte nicht in der Hand gefunden.');
       const validation = validateMeld(cards, move.meldType, aceValue, tron);
       if (!validation.valid) return err(prev, validation.error ?? 'Ungültiges Per.');
 
       player.hand = removeCards(player.hand, move.cardIds);
-      state.melds.push({
+      player.pendingMelds.push({
         id: nextMeldId(),
         type: move.meldType,
         cards: validation.orderedCards,
         ownerId: player.id,
       });
-      state.log.push(`${player.name} legt ein Per aus.`);
-      finishIfEmpty(state);
+      state.log.push(`${player.name} legt ein Per verdeckt ab.`);
+      tryRevealAndFinish(state);
+      return { ok: true, state };
+    }
+
+    case 'UNSTAGE_MELD': {
+      if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
+      const idx = player.pendingMelds.findIndex((m) => m.id === move.pendingMeldId);
+      if (idx < 0) return err(prev, 'Verdecktes Per nicht gefunden.');
+      const [meld] = player.pendingMelds.splice(idx, 1);
+      player.hand.push(...meld.cards);
+      state.log.push(`${player.name} nimmt ein Per aus der Ablage zurück.`);
       return { ok: true, state };
     }
 
     case 'APPEND_TO_MELD': {
       if (state.turnPhase !== 'meld') return err(prev, 'Du musst zuerst eine Karte ziehen.');
-      if (!player.hasOpened) return err(prev, 'Du musst zuerst eröffnen.');
       const meld = state.melds.find((m) => m.id === move.meldId);
       if (!meld) return err(prev, 'Per nicht gefunden.');
       const cards = pickCards(player.hand, move.cardIds);
@@ -193,7 +168,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       meld.cards = combined;
       player.hand = removeCards(player.hand, move.cardIds);
       state.log.push(`${player.name} legt an ein Per an.`);
-      finishIfEmpty(state);
+      tryRevealAndFinish(state);
       return { ok: true, state };
     }
 
@@ -205,7 +180,7 @@ export function applyMove(prev: GameState, move: Move): MoveResult {
       player.hand = removeCards(player.hand, [move.cardId]);
       state.discardPile.push(discarded);
       state.log.push(`${player.name} wirft eine Karte ab.`);
-      if (!finishIfEmpty(state, discarded)) {
+      if (!tryRevealAndFinish(state, discarded)) {
         advanceTurn(state);
       }
       return { ok: true, state };
