@@ -8,6 +8,7 @@ import { MeldsArea, StagingArea } from '@/components/melds/MeldsArea';
 import { IndicatorCard } from './IndicatorCard';
 import { Scoreboard } from './Scoreboard';
 import { ActionBar } from '@/components/ui/ActionBar';
+import { RulesButton } from '@/components/ui/GameRules';
 import { indicatorPenaltyMultiplier } from '@/engine/tron';
 
 export function GameTable() {
@@ -66,6 +67,7 @@ export function GameTable() {
       >
         Verlassen
       </button>
+      <RulesButton className="absolute top-12 left-3 z-[60]" />
       <Scoreboard players={game.players} currentPlayerId={player.id} />
       <div className="casino-table">
         <div className="relative z-10 pt-4 flex flex-col items-center gap-3 shrink-0">

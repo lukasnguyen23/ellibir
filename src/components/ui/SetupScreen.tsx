@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { GameSettings } from '@/engine/types';
+import { RulesButton } from '@/components/ui/GameRules';
 
 interface Props {
   onStart: (players: { id: string; name: string }[], settings: Partial<GameSettings>) => void;
@@ -34,6 +35,7 @@ export function SetupScreen({ onStart }: Props) {
 
   return (
     <div className="casino-room relative w-full h-full flex items-center justify-center p-4">
+      <RulesButton className="absolute top-3 right-3 z-20" />
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
