@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Ohne Firebase Auth: Zugriff über Raumcode + Spieler-ID im Client.
+// Für Produktion später Auth oder Cloud Functions erwägen.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /rooms/{roomId} {
+      allow read: if true;
+
+      allow create: if request.resource.data.status == 'waiting'
+        && request.resource.data.code == roomId;
+
+      allow update: if resource.data.status == 'waiting'
+        || (resource.data.hostId == request.resource.data.hostId
+            && request.resource.data.status == 'playing');
+
+      match /game/public {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      match /game/server {
+        allow read, write: if true;
+      }
+
+      match /secrets/{playerId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      match /moves/{moveId} {
+        allow read, write: if true;
+      }
+    }
+  }
+}
