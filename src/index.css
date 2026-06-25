@@ -86,7 +86,6 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   min-height: 0;
 }
 
@@ -477,6 +476,108 @@ body {
 .rules-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+}
+
+/* Mobile: Hand-Leiste + Navbar unten */
+.mobile-game-chrome {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
+}
+
+.mobile-game-chrome .game-hand-dock {
+  padding-bottom: 0;
+  border-top: 1px solid rgba(201, 162, 39, 0.3);
+}
+
+.casino-table--mobile-play {
+  --mobile-chrome-height: 10.5rem;
+}
+
+.mobile-side-nav {
+  border-radius: 1rem 0 0 1rem;
+}
+
+.casino-table--mobile-play .casino-play-area {
+  padding-bottom: calc(var(--mobile-chrome-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-staging-dock {
+  bottom: calc(var(--mobile-chrome-height, 10.5rem) + env(safe-area-inset-bottom, 0px));
+}
+
+.game-hand-dock {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 639px) {
+  .indicator-board {
+    gap: 0.4rem;
+    padding: 0.4rem 0.55rem 0.5rem;
+    max-width: 100%;
+  }
+
+  .indicator-board__header {
+    gap: 0.35rem;
+  }
+
+  .indicator-board__flow {
+    gap: 0.25rem;
+  }
+
+  .indicator-board__group {
+    gap: 0.25rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .indicator-slot {
+    min-width: 3.25rem;
+    gap: 0.2rem;
+  }
+
+  .indicator-slot__pedestal {
+    padding: 0.2rem;
+  }
+
+  .indicator-slot__label {
+    font-size: 0.5rem;
+  }
+
+  .indicator-slot__meta,
+  .indicator-slot__hint {
+    font-size: 0.55rem;
+    max-width: 3.75rem;
+  }
+
+  .indicator-flow__line {
+    width: 0.65rem;
+  }
+
+  .indicator-flow {
+    margin-top: 0.45rem;
+  }
+
+  .indicator-plus {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.45rem;
+    font-size: 0.6rem;
+  }
+}
+
+.hand-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+
+.hand-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 ::-webkit-scrollbar {

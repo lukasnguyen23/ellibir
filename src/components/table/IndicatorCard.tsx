@@ -49,9 +49,10 @@ function CardPedestal({ children }: { children: ReactNode }) {
 interface Props {
   indicatorCard: Card;
   tron: TronCard;
+  compact?: boolean;
 }
 
-export function IndicatorCard({ indicatorCard, tron }: Props) {
+export function IndicatorCard({ indicatorCard, tron, compact = false }: Props) {
   const mult = indicatorPenaltyMultiplier(indicatorCard);
   const suit = indicatorCard.suit as Suit;
   const suitSymbol = SUIT_SYMBOL[suit];
@@ -75,14 +76,18 @@ export function IndicatorCard({ indicatorCard, tron }: Props) {
     >
       <motion.div className="indicator-board__header" custom={0} variants={flowVariants}>
         <div className="flex items-center gap-2">
-          <span className="indicator-board__title">Rundenregel</span>
-          <span className="indicator-board__dot" aria-hidden />
-          <span className="text-[11px] text-white/45">Anzeige bestimmt Tron &amp; Strafe</span>
+          <span className="indicator-board__title">{compact ? 'Regel' : 'Rundenregel'}</span>
+          {!compact && (
+            <>
+              <span className="indicator-board__dot" aria-hidden />
+              <span className="text-[11px] text-white/45">Anzeige bestimmt Tron &amp; Strafe</span>
+            </>
+          )}
         </div>
         <span
           className={`indicator-board__mult ${suitRed ? 'indicator-board__mult--red' : 'indicator-board__mult--black'}`}
         >
-          <span className="text-[10px] opacity-70 mr-1">Strafe</span>
+          {!compact && <span className="text-[10px] opacity-70 mr-1">Strafe</span>}
           {suitSymbol} ×{mult}
         </span>
       </motion.div>
@@ -91,12 +96,12 @@ export function IndicatorCard({ indicatorCard, tron }: Props) {
         <motion.div className="indicator-slot" custom={1} variants={flowVariants}>
           <SlotLabel>Anzeige</SlotLabel>
           <CardPedestal>
-            <PlayingCard card={indicatorCard} small interactive={false} />
+            <PlayingCard card={indicatorCard} small={!compact} mini={compact} interactive={false} />
           </CardPedestal>
           <span
             className={`indicator-slot__meta ${suitRed ? 'text-card-red' : 'text-white/80'}`}
           >
-            {cardLabel(indicatorCard)}
+            {compact ? `${indicatorCard.rank}${suitSymbol}` : cardLabel(indicatorCard)}
           </span>
         </motion.div>
 
@@ -106,11 +111,13 @@ export function IndicatorCard({ indicatorCard, tron }: Props) {
           <div className="indicator-slot">
             <SlotLabel>Tron</SlotLabel>
             <CardPedestal>
-              <PlayingCard card={tronDisplay} small isTron interactive={false} />
+              <PlayingCard card={tronDisplay} small={!compact} mini={compact} isTron interactive={false} />
             </CardPedestal>
-            <span className="indicator-slot__meta indicator-slot__hint text-brass-400">
-              Überall einsetzbar
-            </span>
+            {!compact && (
+              <span className="indicator-slot__meta indicator-slot__hint text-brass-400">
+                Überall einsetzbar
+              </span>
+            )}
           </div>
 
           <div className="indicator-plus" aria-hidden>
@@ -120,10 +127,14 @@ export function IndicatorCard({ indicatorCard, tron }: Props) {
           <div className="indicator-slot">
             <SlotLabel>Joker</SlotLabel>
             <CardPedestal>
-              <PlayingCard card={JOKER_DISPLAY} tron={tron} small interactive={false} />
+              <PlayingCard card={JOKER_DISPLAY} tron={tron} small={!compact} mini={compact} interactive={false} />
             </CardPedestal>
-            <span className="indicator-slot__meta text-white/55 text-center leading-tight">
-              = <span className="text-brass-400 font-semibold">{tronLabel}</span>
+            <span className={`indicator-slot__meta text-white/55 text-center leading-tight ${compact ? 'text-[9px]' : ''}`}>
+              {compact ? tronLabel : (
+                <>
+                  = <span className="text-brass-400 font-semibold">{tronLabel}</span>
+                </>
+              )}
             </span>
           </div>
         </motion.div>

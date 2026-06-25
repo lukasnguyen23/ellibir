@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { Hand } from '@/components/cards/Hand';
 import { Opponents } from './Opponents';
 import { DrawPile, DiscardPile } from './Piles';
 import { MeldsArea, StagingArea } from '@/components/melds/MeldsArea';
 import { IndicatorCard } from './IndicatorCard';
+import { MobilePlayerStrip } from './MobilePlayerStrip';
+import { MobileGameMenuButton, MobileGameSideNav } from './MobileGameSideNav';
 import { Scoreboard } from './Scoreboard';
 import { ActionBar } from '@/components/ui/ActionBar';
-import { RulesButton } from '@/components/ui/GameRules';
+import { RulesButton, RulesModal } from '@/components/ui/GameRules';
 import { indicatorPenaltyMultiplier } from '@/engine/tron';
 
 export function GameTable() {
@@ -44,6 +47,9 @@ export function GameTable() {
     () => (!isOnline ? game.players[game.currentPlayerIndex].id : null),
   );
   const [shownIndex, setShownIndex] = useState(game.currentPlayerIndex);
+  const [roundInfoOpen, setRoundInfoOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isOnline) {
@@ -64,6 +70,7 @@ export function GameTable() {
 
   const handCards = localPlayer.hand;
   const canAct = !isOnline || isMyTurn;
+  const isMobile = useMediaQuery('(max-width: 639px)');
 
   const winner = game.status === 'finished' ? game.players.find((p) => p.id === game.winnerId) : null;
   const suitMult = indicatorPenaltyMultiplier(game.indicatorCard);
@@ -77,38 +84,80 @@ export function GameTable() {
       : [];
 
   return (
-    <div className="casino-room relative w-full h-full overflow-hidden">
-      <button
-        type="button"
-        onClick={exitToMenu}
-        className="absolute top-3 left-3 z-[60] px-3 py-1.5 rounded-lg text-sm font-semibold casino-chip text-white/80 hover:text-white hover:border-brass-400/40 transition"
-      >
-        Verlassen
-      </button>
-      <RulesButton className="absolute top-12 left-3 z-[60]" />
-      <Scoreboard players={game.players} currentPlayerId={localPlayer.id} />
-      <div className="casino-table">
-        <div className="relative z-10 pt-4 flex flex-col items-center gap-3 shrink-0">
-          <span className="casino-chip px-3 py-1 text-xs text-brass-400 font-semibold tracking-wide">
-            Runde {game.roundNumber} / {game.settings.totalRounds}
-          </span>
-          {isOnline && !isMyTurn && game.status === 'playing' && (
-            <span className="text-sm text-gold-400 animate-pulse">
+    <div className="casino-room relative flex h-full w-full flex-col overflow-hidden">
+      {isMobile ? (
+        <div className="relative z-[60] shrink-0">
+          <div className="flex items-center gap-2 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-0.5">
+            <div className="h-8 w-8 shrink-0" aria-hidden />
+            <div className="min-w-0 flex-1 text-center">
+              <p className="text-[10px] font-semibold tracking-wide text-brass-400">
+                Runde {game.roundNumber} / {game.settings.totalRounds}
+              </p>
+              <p
+                className={`truncate text-[10px] ${
+                  canAct && game.status === 'playing' ? 'text-gold-400' : 'text-white/55'
+                }`}
+              >
+                {canAct && game.status === 'playing'
+                  ? 'Du bist am Zug'
+                  : `${currentTurnPlayer.name} ist am Zug`}
+              </p>
+            </div>
+            <MobileGameMenuButton onOpen={() => setMenuOpen(true)} />
+          </div>
+          <MobilePlayerStrip
+            players={game.players}
+            currentPlayerId={currentTurnPlayer.id}
+            localPlayerId={localPlayer.id}
+          />
+        </div>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={exitToMenu}
+            className="absolute top-3 left-3 z-[60] px-3 py-1.5 rounded-lg text-sm font-semibold casino-chip text-white/80 hover:text-white hover:border-brass-400/40 transition"
+          >
+            Verlassen
+          </button>
+          <RulesButton className="absolute top-12 left-3 z-[60]" />
+          <Scoreboard players={game.players} currentPlayerId={localPlayer.id} />
+        </>
+      )}
+      <div className={isMobile ? 'casino-table casino-table--mobile-play min-h-0 flex-1' : 'casino-table min-h-0 flex-1'}>
+        <div className="relative z-10 flex flex-col items-center shrink-0 px-2 sm:px-0 sm:pt-4 sm:gap-3">
+          {!isMobile && (
+            <span className="casino-chip px-3 py-1 text-xs text-brass-400 font-semibold tracking-wide">
+              Runde {game.roundNumber} / {game.settings.totalRounds}
+            </span>
+          )}
+          {!isMobile && isOnline && !isMyTurn && game.status === 'playing' && (
+            <span className="text-sm text-gold-400 animate-pulse text-center px-2">
               {currentTurnPlayer.name} ist am Zug…
             </span>
           )}
-          <IndicatorCard indicatorCard={game.indicatorCard} tron={game.tron} />
-          <Opponents opponents={opponents} currentPlayerId={currentTurnPlayer.id} />
+          {!isMobile && <IndicatorCard indicatorCard={game.indicatorCard} tron={game.tron} />}
+          {!isMobile && (
+            <Opponents
+              opponents={opponents}
+              currentPlayerId={currentTurnPlayer.id}
+            />
+          )}
         </div>
 
-        <div className="relative z-10 flex-1 flex px-4 sm:px-6 py-3 min-h-0">
+        <div
+          className={`casino-play-area relative z-10 flex min-h-0 flex-1 ${
+            isMobile ? 'px-2 py-1' : 'px-4 sm:px-6 py-3'
+          }`}
+        >
           <div className="casino-rail flex-1 min-h-0">
             <div className="casino-felt casino-spotlight relative w-full h-full min-h-0">
-              <div className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20">
+              <div className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 z-20">
                 <DrawPile
                   drawCount={game.drawPile.length}
                   canDraw={canAct && game.turnPhase === 'draw'}
                   onDrawStock={() => dispatch({ type: 'DRAW_STOCK' })}
+                  compact={isMobile}
                 />
               </div>
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
@@ -118,6 +167,7 @@ export function GameTable() {
                   canDraw={canAct && game.turnPhase === 'draw'}
                   onDrawDiscard={() => dispatch({ type: 'DRAW_DISCARD' })}
                   centered
+                  compact={isMobile}
                 />
               </div>
               <MeldsArea
@@ -126,36 +176,131 @@ export function GameTable() {
                 playerNames={playerNames}
                 canAppend={canAct && game.turnPhase === 'meld' && selectedCardIds.length > 0}
                 onMeldClick={appendSelectionToMeld}
+                compact={isMobile}
               />
             </div>
           </div>
         </div>
 
         {game.turnPhase === 'meld' && localPlayer.pendingMelds.length > 0 && (
-          <div className="relative z-10 px-4 sm:px-6 pb-1 shrink-0">
+          <div
+            className={`relative z-10 shrink-0 ${
+              isMobile
+                ? 'mobile-staging-dock fixed left-0 right-0 z-40 px-2'
+                : 'px-4 sm:px-6 pb-1'
+            }`}
+          >
             <StagingArea
               pendingMelds={localPlayer.pendingMelds}
               tron={game.tron}
               onUnstage={canAct ? unstagePendingMeld : () => {}}
+              compact={isMobile}
             />
           </div>
         )}
 
-        <div className="relative z-10 casino-leather shrink-0 min-w-0">
-          <div className="flex items-center justify-between px-4 sm:px-6 pt-2 gap-2">
-            <span className="text-brass-400 font-semibold shrink-0">{localPlayer.name}</span>
-            <ActionBar game={game} playerId={localPlayer.id} canAct={canAct} />
-            <span className="casino-label shrink-0">{handCards.length} Karten</span>
+        {isMobile ? (
+          <div className="mobile-game-chrome">
+            <div className="game-hand-dock casino-leather min-w-0">
+              <div className="flex min-w-0 items-center gap-2 px-2 pt-1.5">
+                <div className="max-w-[28%] shrink-0 min-w-0">
+                  <span className="block truncate text-xs font-semibold text-brass-400">
+                    {localPlayer.name}
+                  </span>
+                  <span className="casino-label text-[9px]">{handCards.length} Karten</span>
+                </div>
+                <div className="flex min-w-0 flex-1 justify-end">
+                  <ActionBar
+                    game={game}
+                    playerId={localPlayer.id}
+                    canAct={canAct}
+                    compact
+                  />
+                </div>
+              </div>
+              <Hand
+                cards={handCards}
+                tron={game.tron}
+                selectedIds={selectedCardIds}
+                onToggle={canAct ? toggleSelect : () => {}}
+                onReorder={canAct ? reorderHand : () => {}}
+                compact
+              />
+            </div>
           </div>
-          <Hand
-            cards={handCards}
-            tron={game.tron}
-            selectedIds={selectedCardIds}
-            onToggle={canAct ? toggleSelect : () => {}}
-            onReorder={canAct ? reorderHand : () => {}}
-          />
-        </div>
+        ) : (
+          <div className="game-hand-dock casino-leather relative z-10 shrink-0 min-w-0">
+            <div className="flex items-center justify-between gap-2 px-4 sm:px-6 pt-2">
+              <span className="shrink-0 font-semibold text-brass-400">{localPlayer.name}</span>
+              <ActionBar game={game} playerId={localPlayer.id} canAct={canAct} />
+              <span className="casino-label shrink-0">{handCards.length} Karten</span>
+            </div>
+            <Hand
+              cards={handCards}
+              tron={game.tron}
+              selectedIds={selectedCardIds}
+              onToggle={canAct ? toggleSelect : () => {}}
+              onReorder={canAct ? reorderHand : () => {}}
+            />
+          </div>
+        )}
       </div>
+
+      <MobileGameSideNav
+        open={isMobile && menuOpen}
+        onClose={() => setMenuOpen(false)}
+        roundLabel={`Runde ${game.roundNumber} / ${game.settings.totalRounds}`}
+        turnLabel={
+          canAct && game.status === 'playing'
+            ? 'Du bist am Zug'
+            : `${currentTurnPlayer.name} ist am Zug`
+        }
+        onRoundInfo={() => setRoundInfoOpen(true)}
+        onRules={() => setRulesOpen(true)}
+        onLeave={exitToMenu}
+      />
+
+      <RulesModal open={isMobile && rulesOpen} onClose={() => setRulesOpen(false)} />
+
+      <AnimatePresence>
+        {isMobile && roundInfoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center bg-room-900/70 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm"
+            onClick={() => setRoundInfoOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 24, opacity: 0, scale: 0.98 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 18, opacity: 0, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              className="w-full max-w-sm casino-panel rounded-2xl p-3 shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Rundeninfo"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl text-gold-400">Rundeninfo</h2>
+                  <p className="text-xs text-white/45">Anzeige, Tron, Joker und Strafmultiplikator</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRoundInfoOpen(false)}
+                  className="h-8 w-8 rounded-lg bg-white/10 text-lg leading-none text-white/65 hover:bg-white/20 hover:text-white"
+                  aria-label="Rundeninfo schließen"
+                >
+                  ×
+                </button>
+              </div>
+              <IndicatorCard indicatorCard={game.indicatorCard} tron={game.tron} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {!isOnline && handoffFor && game.status === 'playing' && (

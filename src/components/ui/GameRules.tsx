@@ -145,7 +145,7 @@ interface ModalProps {
   onClose: () => void;
 }
 
-function RulesModal({ open, onClose }: ModalProps) {
+export function RulesModal({ open, onClose }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;

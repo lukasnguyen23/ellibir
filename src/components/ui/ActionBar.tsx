@@ -7,11 +7,13 @@ function Btn({
   onClick,
   disabled,
   variant = 'default',
+  compact = false,
 }: {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   variant?: 'default' | 'primary' | 'danger';
+  compact?: boolean;
 }) {
   const styles =
     variant === 'primary'
@@ -24,7 +26,9 @@ function Btn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-30 disabled:cursor-not-allowed ${styles}`}
+      className={`rounded-lg font-semibold transition disabled:opacity-30 disabled:cursor-not-allowed ${
+        compact ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'
+      } ${styles}`}
     >
       {children}
     </button>
@@ -35,10 +39,12 @@ export function ActionBar({
   game,
   playerId,
   canAct = true,
+  compact = false,
 }: {
   game: GameState;
   playerId?: string;
   canAct?: boolean;
+  compact?: boolean;
 }) {
   const { selectedCardIds, stageMeldFromSelection, discardSelected } = useGameStore();
 
@@ -50,24 +56,26 @@ export function ActionBar({
 
   if (!canAct) {
     return (
-      <span className="text-sm text-white/40">Warte auf deinen Zug…</span>
+      <span className={`text-white/40 ${compact ? 'text-xs' : 'text-sm'}`}>
+        Warte auf deinen Zug…
+      </span>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap justify-center">
+    <div className={`flex items-center justify-end ${compact ? 'gap-1.5' : 'gap-2 flex-wrap justify-center'}`}>
       {phase === 'draw' && (
-        <span className="text-sm text-gold-400 animate-pulse">
-          Ziehe eine Karte (Nachziehstapel oder Ablage)
+        <span className={`text-gold-400 animate-pulse ${compact ? 'text-xs text-right leading-tight' : 'text-sm'}`}>
+          {compact ? 'Karte ziehen' : 'Ziehe eine Karte (Nachziehstapel oder Ablage)'}
         </span>
       )}
 
       {phase === 'meld' && (
         <>
-          <Btn onClick={stageMeldFromSelection} disabled={!validation} variant="primary">
-            Per zur Ablage
+          <Btn onClick={stageMeldFromSelection} disabled={!validation} variant="primary" compact={compact}>
+            {compact ? 'Per' : 'Per zur Ablage'}
           </Btn>
-          {pendingCount > 0 && (
+          {pendingCount > 0 && !compact && (
             <span className="text-xs text-white/50">
               {pendingCount} in Ablage · 0 Pkt. · Aufdecken wenn Hand leer
             </span>
@@ -76,8 +84,9 @@ export function ActionBar({
             onClick={discardSelected}
             disabled={selectedCardIds.length !== 1}
             variant="danger"
+            compact={compact}
           >
-            Abwerfen &amp; Zug beenden
+            {compact ? 'Abwerfen' : 'Abwerfen & Zug beenden'}
           </Btn>
         </>
       )}

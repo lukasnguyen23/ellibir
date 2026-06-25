@@ -22,6 +22,7 @@ interface HandProps {
   selectedIds: string[];
   onToggle: (id: string) => void;
   onReorder: (orderedIds: string[]) => void;
+  compact?: boolean;
 }
 
 function SortableCard({
@@ -29,11 +30,13 @@ function SortableCard({
   tron,
   selected,
   onToggle,
+  compact,
 }: {
   card: Card;
   tron: TronCard;
   selected: boolean;
   onToggle: (id: string) => void;
+  compact?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -53,6 +56,7 @@ function SortableCard({
         card={card}
         tron={tron}
         selected={selected}
+        small={compact}
         onClick={() => onToggle(card.id)}
         draggableProps={{ ...attributes, ...listeners }}
       />
@@ -60,7 +64,7 @@ function SortableCard({
   );
 }
 
-export function Hand({ cards, tron, selectedIds, onToggle, onReorder }: HandProps) {
+export function Hand({ cards, tron, selectedIds, onToggle, onReorder, compact = false }: HandProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
@@ -76,7 +80,11 @@ export function Hand({ cards, tron, selectedIds, onToggle, onReorder }: HandProp
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={cards.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-        <div className="flex items-end gap-2 px-4 pt-6 pb-2 overflow-x-auto flex-nowrap min-w-0">
+        <div
+          className={`hand-scroll flex items-end flex-nowrap min-w-0 overflow-x-auto ${
+            compact ? 'gap-1 px-2 pt-2 pb-1' : 'gap-2 px-4 pt-6 pb-2'
+          }`}
+        >
           {cards.map((card) => (
             <SortableCard
               key={card.id}
@@ -84,6 +92,7 @@ export function Hand({ cards, tron, selectedIds, onToggle, onReorder }: HandProp
               tron={tron}
               selected={selectedIds.includes(card.id)}
               onToggle={onToggle}
+              compact={compact}
             />
           ))}
         </div>

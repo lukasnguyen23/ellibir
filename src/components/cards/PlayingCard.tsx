@@ -27,6 +27,12 @@ function cardSizeClass(small: boolean, mini: boolean): string {
   return 'w-[68px] h-[96px] text-sm';
 }
 
+function selectedLift(small: boolean, mini: boolean): number {
+  if (mini) return -10;
+  if (small) return -12;
+  return -18;
+}
+
 function JokerFace({
   tron,
   small,
@@ -51,6 +57,7 @@ function JokerFace({
   const tronSymbol = tron ? SUIT_SYMBOL[tron.suit] : null;
   const tronRed = tron ? tron.suit === 'hearts' || tron.suit === 'diamonds' : false;
   const compact = small || mini;
+  const lift = selectedLift(small, mini);
 
   const className = `card-joker ${size} relative rounded-lg select-none text-fuchsia-800
     border-2 ${
@@ -112,7 +119,7 @@ function JokerFace({
   if (!interactive) {
     return (
       <motion.div
-        animate={{ y: selected ? -18 : 0 }}
+        animate={{ y: selected ? lift : 0 }}
         className={className}
         aria-label={ariaLabel}
         {...motionProps}
@@ -126,7 +133,7 @@ function JokerFace({
     <motion.button
       type="button"
       onClick={onClick}
-      animate={{ y: selected ? -18 : 0 }}
+      animate={{ y: selected ? lift : 0 }}
       className={className}
       aria-label={ariaLabel}
       {...motionProps}
@@ -150,6 +157,7 @@ export function PlayingCard({
   draggableProps,
 }: Props) {
   const size = cardSizeClass(small, mini);
+  const lift = selectedLift(small, mini);
   const isInteractive = interactive ?? Boolean(onClick || draggableProps);
 
   const ariaLabel = faceDown
@@ -228,7 +236,7 @@ export function PlayingCard({
   if (!isInteractive) {
     return (
       <motion.div
-        animate={{ y: selected ? -18 : 0 }}
+        animate={{ y: selected ? lift : 0 }}
         className={className}
         aria-label={ariaLabel}
         {...motionProps}
@@ -242,7 +250,7 @@ export function PlayingCard({
     <motion.button
       type="button"
       onClick={onClick}
-      animate={{ y: selected ? -18 : 0 }}
+      animate={{ y: selected ? lift : 0 }}
       className={className}
       aria-label={ariaLabel}
       {...motionProps}
