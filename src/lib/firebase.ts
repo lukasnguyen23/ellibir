@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, type Firestore, type FirestoreSettings } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -36,7 +36,10 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirestoreDb(): Firestore {
   if (!db) {
-    db = getFirestore(getFirebaseApp());
+    const settings: FirestoreSettings & { useFetchStreams: boolean } = {
+      useFetchStreams: false,
+    };
+    db = initializeFirestore(getFirebaseApp(), settings);
   }
   return db;
 }
