@@ -1,5 +1,12 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { initializeFirestore, type Firestore, type FirestoreSettings } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
+
+/** Safari (Desktop + iOS): Fetch Streams können onSnapshot verzögern (firebase-js-sdk #9789). */
+function isSafari(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|OPR|Opera/i.test(ua);
+}
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -36,10 +43,17 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirestoreDb(): Firestore {
   if (!db) {
-    const settings: FirestoreSettings & { useFetchStreams: boolean } = {
-      useFetchStreams: false,
-    };
-    db = initializeFirestore(getFirebaseApp(), settings);
+    const firebaseApp = getFirebaseApp();
+    if (isSafari()) {
+      // useFetchStreams supported at runtime but omitted from public FirestoreSettings types.
+      const safariSettings = {
+        useFetchStreams: false,
+        experimentalForceLongPolling: true,
+      } as Parameters<typeof initializeFirestore>[1];
+      db = initializeFirestore(firebaseApp, safariSettings);
+    } else {
+      db = getFirestore(firebaseApp);
+    }
   }
   return db;
 }
