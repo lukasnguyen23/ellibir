@@ -5,9 +5,10 @@ import { RulesButton } from '@/components/ui/GameRules';
 
 interface Props {
   onStart: (players: { id: string; name: string }[], settings: Partial<GameSettings>) => void;
+  onBack?: () => void;
 }
 
-export function SetupScreen({ onStart }: Props) {
+export function SetupScreen({ onStart, onBack }: Props) {
   const [count, setCount] = useState(2);
   const [names, setNames] = useState<string[]>([
     'Spieler 1',
@@ -35,6 +36,15 @@ export function SetupScreen({ onStart }: Props) {
 
   return (
     <div className="casino-room relative w-full h-full flex items-center justify-center p-4">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-lg text-sm font-semibold casino-chip text-white/80 hover:text-white"
+        >
+          Zurück
+        </button>
+      )}
       <RulesButton className="absolute top-3 right-3 z-20" />
       <motion.div
         initial={{ y: 24, opacity: 0 }}

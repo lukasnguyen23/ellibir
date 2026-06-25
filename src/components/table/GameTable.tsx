@@ -13,6 +13,10 @@ import { indicatorPenaltyMultiplier } from '@/engine/tron';
 
 export function GameTable() {
   const game = useGameStore((s) => s.game)!;
+  const mode = useGameStore((s) => s.mode);
+  const localPlayerId = useGameStore((s) => s.localPlayerId);
+  const isMyTurn = useGameStore((s) => s.isMyTurn);
+  const isHost = useGameStore((s) => s.isHost);
   const selectedCardIds = useGameStore((s) => s.selectedCardIds);
   const {
     dispatch,
@@ -24,28 +28,42 @@ export function GameTable() {
     exitToMenu,
   } = useGameStore();
 
-  const player = game.players[game.currentPlayerIndex];
-  const opponents = game.players.filter((_, i) => i !== game.currentPlayerIndex);
+  const isOnline = mode === 'online';
+  const localPlayer =
+    isOnline && localPlayerId
+      ? game.players.find((p) => p.id === localPlayerId)
+      : game.players[game.currentPlayerIndex];
+  const currentTurnPlayer = game.players[game.currentPlayerIndex];
+
+  if (!localPlayer) return null;
+
+  const opponents = game.players.filter((p) => p.id !== localPlayer.id);
   const playerNames = Object.fromEntries(game.players.map((p) => [p.id, p.name]));
 
   const [handoffFor, setHandoffFor] = useState<string | null>(
-    () => game.players[game.currentPlayerIndex].id,
+    () => (!isOnline ? game.players[game.currentPlayerIndex].id : null),
   );
   const [shownIndex, setShownIndex] = useState(game.currentPlayerIndex);
 
   useEffect(() => {
+    if (isOnline) {
+      setHandoffFor(null);
+      return;
+    }
     setHandoffFor(game.players[game.currentPlayerIndex].id);
     setShownIndex(game.currentPlayerIndex);
-  }, [game.id]);
+  }, [game.id, isOnline]);
 
   useEffect(() => {
+    if (isOnline) return;
     if (game.currentPlayerIndex !== shownIndex && game.status === 'playing') {
       setHandoffFor(game.players[game.currentPlayerIndex].id);
       setShownIndex(game.currentPlayerIndex);
     }
-  }, [game.currentPlayerIndex, game.status, game.players, shownIndex]);
+  }, [game.currentPlayerIndex, game.status, game.players, shownIndex, isOnline]);
 
-  const handCards = player.hand;
+  const handCards = localPlayer.hand;
+  const canAct = !isOnline || isMyTurn;
 
   const winner = game.status === 'finished' ? game.players.find((p) => p.id === game.winnerId) : null;
   const suitMult = indicatorPenaltyMultiplier(game.indicatorCard);
@@ -68,14 +86,19 @@ export function GameTable() {
         Verlassen
       </button>
       <RulesButton className="absolute top-12 left-3 z-[60]" />
-      <Scoreboard players={game.players} currentPlayerId={player.id} />
+      <Scoreboard players={game.players} currentPlayerId={localPlayer.id} />
       <div className="casino-table">
         <div className="relative z-10 pt-4 flex flex-col items-center gap-3 shrink-0">
           <span className="casino-chip px-3 py-1 text-xs text-brass-400 font-semibold tracking-wide">
             Runde {game.roundNumber} / {game.settings.totalRounds}
           </span>
+          {isOnline && !isMyTurn && game.status === 'playing' && (
+            <span className="text-sm text-gold-400 animate-pulse">
+              {currentTurnPlayer.name} ist am Zug…
+            </span>
+          )}
           <IndicatorCard indicatorCard={game.indicatorCard} tron={game.tron} />
-          <Opponents opponents={opponents} currentPlayerId={player.id} />
+          <Opponents opponents={opponents} currentPlayerId={currentTurnPlayer.id} />
         </div>
 
         <div className="relative z-10 flex-1 flex px-4 sm:px-6 py-3 min-h-0">
@@ -84,7 +107,7 @@ export function GameTable() {
               <div className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20">
                 <DrawPile
                   drawCount={game.drawPile.length}
-                  canDraw={game.turnPhase === 'draw'}
+                  canDraw={canAct && game.turnPhase === 'draw'}
                   onDrawStock={() => dispatch({ type: 'DRAW_STOCK' })}
                 />
               </div>
@@ -92,7 +115,7 @@ export function GameTable() {
                 <DiscardPile
                   discardTop={game.discardPile.at(-1) ?? null}
                   tron={game.tron}
-                  canDraw={game.turnPhase === 'draw'}
+                  canDraw={canAct && game.turnPhase === 'draw'}
                   onDrawDiscard={() => dispatch({ type: 'DRAW_DISCARD' })}
                   centered
                 />
@@ -101,41 +124,41 @@ export function GameTable() {
                 melds={game.melds}
                 tron={game.tron}
                 playerNames={playerNames}
-                canAppend={game.turnPhase === 'meld' && selectedCardIds.length > 0}
+                canAppend={canAct && game.turnPhase === 'meld' && selectedCardIds.length > 0}
                 onMeldClick={appendSelectionToMeld}
               />
             </div>
           </div>
         </div>
 
-        {game.turnPhase === 'meld' && (
+        {game.turnPhase === 'meld' && localPlayer.pendingMelds.length > 0 && (
           <div className="relative z-10 px-4 sm:px-6 pb-1 shrink-0">
             <StagingArea
-              pendingMelds={player.pendingMelds}
+              pendingMelds={localPlayer.pendingMelds}
               tron={game.tron}
-              onUnstage={unstagePendingMeld}
+              onUnstage={canAct ? unstagePendingMeld : () => {}}
             />
           </div>
         )}
 
         <div className="relative z-10 casino-leather shrink-0 min-w-0">
           <div className="flex items-center justify-between px-4 sm:px-6 pt-2 gap-2">
-            <span className="text-brass-400 font-semibold shrink-0">{player.name}</span>
-            <ActionBar game={game} />
+            <span className="text-brass-400 font-semibold shrink-0">{localPlayer.name}</span>
+            <ActionBar game={game} playerId={localPlayer.id} canAct={canAct} />
             <span className="casino-label shrink-0">{handCards.length} Karten</span>
           </div>
           <Hand
             cards={handCards}
             tron={game.tron}
             selectedIds={selectedCardIds}
-            onToggle={toggleSelect}
-            onReorder={reorderHand}
+            onToggle={canAct ? toggleSelect : () => {}}
+            onReorder={canAct ? reorderHand : () => {}}
           />
         </div>
       </div>
 
       <AnimatePresence>
-        {handoffFor && game.status === 'playing' && (
+        {!isOnline && handoffFor && game.status === 'playing' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -146,9 +169,11 @@ export function GameTable() {
             <h2 className="font-display text-5xl text-gold-400">
               {game.players.find((p) => p.id === handoffFor)?.name}
             </h2>
-            {handoffFor === player.id && player.hand.length === 15 && game.turnPhase === 'meld' && (
-              <p className="text-white/70 text-sm">Du beginnst mit 15 Karten – lege eine ab.</p>
-            )}
+            {handoffFor === localPlayer.id &&
+              localPlayer.hand.length === 15 &&
+              game.turnPhase === 'meld' && (
+                <p className="text-white/70 text-sm">Du beginnst mit 15 Karten – lege eine ab.</p>
+              )}
             <button
               type="button"
               onClick={() => setHandoffFor(null)}
@@ -236,9 +261,12 @@ export function GameTable() {
                 <button
                   type="button"
                   onClick={nextRound}
-                  className="px-8 py-3 rounded-xl bg-gold-500 text-black font-bold hover:bg-gold-400 transition shadow-lg shadow-gold-500/25"
+                  disabled={isOnline && !isHost}
+                  className="px-8 py-3 rounded-xl bg-gold-500 text-black font-bold hover:bg-gold-400 transition shadow-lg shadow-gold-500/25 disabled:opacity-40"
                 >
-                  Nächste Runde ({game.roundNumber + 1}/{game.settings.totalRounds})
+                  {isOnline && !isHost
+                    ? 'Warte auf Host…'
+                    : `Nächste Runde (${game.roundNumber + 1}/${game.settings.totalRounds})`}
                 </button>
               )}
             </motion.div>

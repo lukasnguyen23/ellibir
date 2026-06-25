@@ -31,13 +31,28 @@ function Btn({
   );
 }
 
-export function ActionBar({ game }: { game: GameState }) {
+export function ActionBar({
+  game,
+  playerId,
+  canAct = true,
+}: {
+  game: GameState;
+  playerId?: string;
+  canAct?: boolean;
+}) {
   const { selectedCardIds, stageMeldFromSelection, discardSelected } = useGameStore();
 
   const phase = game.turnPhase;
-  const validation = selectionValidation(game, selectedCardIds);
-  const player = game.players[game.currentPlayerIndex];
-  const pendingCount = player.pendingMelds.length;
+  const activePlayerId = playerId ?? game.players[game.currentPlayerIndex].id;
+  const validation = selectionValidation(game, selectedCardIds, activePlayerId);
+  const player = game.players.find((p) => p.id === activePlayerId);
+  const pendingCount = player?.pendingMelds.length ?? 0;
+
+  if (!canAct) {
+    return (
+      <span className="text-sm text-white/40">Warte auf deinen Zug…</span>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 flex-wrap justify-center">

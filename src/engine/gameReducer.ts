@@ -3,10 +3,8 @@ import { unmeldedPenalty } from './penalties';
 import { indicatorPenaltyMultiplier, isTronDiscard } from './tron';
 import type { Card, GameState, MeldType, Move, MoveResult, PlayerState, TronCard } from './types';
 
-let meldCounter = 0;
 function nextMeldId(): string {
-  meldCounter += 1;
-  return `meld-${Date.now().toString(36)}-${meldCounter}`;
+  return crypto.randomUUID();
 }
 
 function clone(state: GameState): GameState {
